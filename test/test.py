@@ -3,12 +3,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import torchvision.models as models
 from torchvision import datasets, transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from attacks import *
 
-pretrained_model = "data/lenet_mnist_model.pth" # https://drive.google.com/drive/folders/1fn83DF14tWmit0RTKWRhPq5uVXt73e0h
+pretrained_model = "pretrained/lenet_mnist_model.pth" # https://drive.google.com/drive/folders/1fn83DF14tWmit0RTKWRhPq5uVXt73e0h
 use_cuda=True
 
 # LeNet Model definition
@@ -77,7 +78,6 @@ def test( model, device, test_loader):
             if len(adv_examples) < 5:
                 adv_ex = perturbed_data.squeeze().detach().cpu().numpy()
                 adv_examples.append( (init_pred.item(), final_pred.item(), adv_ex))
-        break
 
     # Calculate final accuracy for this epsilon
     final_acc = correct/float(len(test_loader))
@@ -94,29 +94,29 @@ acc, ex = test(model, device, test_loader)
 accuracies.append(acc)
 examples.append(ex)
 
-# # Plotting
-# plt.figure(figsize=(5,5))
-# plt.plot(epsilons, accuracies, "*-")
-# plt.yticks(np.arange(0, 1.1, step=0.1))
-# plt.xticks(np.arange(0, .35, step=0.05))
-# plt.title("Accuracy vs Epsilon")
-# plt.xlabel("Epsilon")
-# plt.ylabel("Accuracy")
-# plt.show()
+# Plotting
+plt.figure(figsize=(5,5))
+plt.plot(epsilons, accuracies, "*-")
+plt.yticks(np.arange(0, 1.1, step=0.1))
+plt.xticks(np.arange(0, .35, step=0.05))
+plt.title("Accuracy vs Epsilon")
+plt.xlabel("Epsilon")
+plt.ylabel("Accuracy")
+plt.show()
 
-# # Plot several examples of adversarial samples at each epsilon
-# cnt = 0
-# plt.figure(figsize=(8,10))
-# for i in range(len(epsilons)):
-#     for j in range(len(examples[i])):
-#         cnt += 1
-#         plt.subplot(len(epsilons),len(examples[0]),cnt)
-#         plt.xticks([], [])
-#         plt.yticks([], [])
-#         if j == 0:
-#             plt.ylabel("Eps: {}".format(epsilons[i]), fontsize=14)
-#         orig,adv,ex = examples[i][j]
-#         plt.title("{} -> {}".format(orig, adv))
-#         plt.imshow(ex, cmap="gray")
-# plt.tight_layout()
-# plt.show()
+# Plot several examples of adversarial samples at each epsilon
+cnt = 0
+plt.figure(figsize=(8,10))
+for i in range(len(epsilons)):
+    for j in range(len(examples[i])):
+        cnt += 1
+        plt.subplot(len(epsilons),len(examples[0]),cnt)
+        plt.xticks([], [])
+        plt.yticks([], [])
+        if j == 0:
+            plt.ylabel("Eps: {}".format(epsilons[i]), fontsize=14)
+        orig,adv,ex = examples[i][j]
+        plt.title("{} -> {}".format(orig, adv))
+        plt.imshow(ex, cmap="gray")
+plt.tight_layout()
+plt.show()
