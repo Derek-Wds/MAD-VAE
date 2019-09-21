@@ -1,5 +1,5 @@
 # Ideas
-
+* Paper: [https://arxiv.org/pdf/1909.08072.pdf](https://arxiv.org/pdf/1909.08072.pdf)
 * Use VAE to denoise.
 * Use VAE to denoise + generate adversarial noise.
 
