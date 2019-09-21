@@ -8,7 +8,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from attacks import *
 
-epsilons = [0, .05, .1, .15, .2, .25, .3]
 pretrained_model = "data/lenet_mnist_model.pth" # https://drive.google.com/drive/folders/1fn83DF14tWmit0RTKWRhPq5uVXt73e0h
 use_cuda=True
 
@@ -51,7 +50,7 @@ model.load_state_dict(torch.load(pretrained_model, map_location='cpu'))
 # Set the model in evaluation mode. In this case this is for the Dropout layers
 model.eval()
 
-def test( model, device, test_loader, epsilon ):
+def test( model, device, test_loader):
 
     # Accuracy counter
     correct = 0
@@ -61,10 +60,10 @@ def test( model, device, test_loader, epsilon ):
     for data, target in test_loader:
 
         # Call FGSM Attack
-        init_pred, perturbed_data = iterll_attack(model, data, target, epsilon)
+        init_pred, perturbed_data = simba_attack(model, data, target)
 
         # Re-classify the perturbed image
-        if 'torch' in str(perturbed_data.dtype):
+        if type(perturbed_data) != int and 'torch' in str(perturbed_data.dtype):
             output = model(perturbed_data)
         else:
             continue # No bother to attack since the prediciton is wrong
@@ -73,19 +72,16 @@ def test( model, device, test_loader, epsilon ):
         final_pred = output.max(1, keepdim=True)[1] # get the index of the max log-probability
         if final_pred.item() == target.item():
             correct += 1
-            # Special case for saving 0 epsilon examples
-            if (epsilon == 0) and (len(adv_examples) < 5):
-                adv_ex = perturbed_data.squeeze().detach().cpu().numpy()
-                adv_examples.append( (init_pred.item(), final_pred.item(), adv_ex) )
         else:
             # Save some adv examples for visualization later
             if len(adv_examples) < 5:
                 adv_ex = perturbed_data.squeeze().detach().cpu().numpy()
-                adv_examples.append( (init_pred.item(), final_pred.item(), adv_ex) )
+                adv_examples.append( (init_pred.item(), final_pred.item(), adv_ex))
+        break
 
     # Calculate final accuracy for this epsilon
     final_acc = correct/float(len(test_loader))
-    print("Epsilon: {}\tTest Accuracy = {} / {} = {}".format(epsilon, correct, len(test_loader), final_acc))
+    print("Test Accuracy = {} / {} = {}".format(correct, len(test_loader), final_acc))
 
     # Return the accuracy and an adversarial example
     return final_acc, adv_examples
@@ -93,35 +89,34 @@ def test( model, device, test_loader, epsilon ):
 accuracies = []
 examples = []
 
-# Run test for each epsilon
-for eps in epsilons:
-    acc, ex = test(model, device, test_loader, eps)
-    accuracies.append(acc)
-    examples.append(ex)
+# Run test
+acc, ex = test(model, device, test_loader)
+accuracies.append(acc)
+examples.append(ex)
 
-# Plotting
-plt.figure(figsize=(5,5))
-plt.plot(epsilons, accuracies, "*-")
-plt.yticks(np.arange(0, 1.1, step=0.1))
-plt.xticks(np.arange(0, .35, step=0.05))
-plt.title("Accuracy vs Epsilon")
-plt.xlabel("Epsilon")
-plt.ylabel("Accuracy")
-plt.show()
+# # Plotting
+# plt.figure(figsize=(5,5))
+# plt.plot(epsilons, accuracies, "*-")
+# plt.yticks(np.arange(0, 1.1, step=0.1))
+# plt.xticks(np.arange(0, .35, step=0.05))
+# plt.title("Accuracy vs Epsilon")
+# plt.xlabel("Epsilon")
+# plt.ylabel("Accuracy")
+# plt.show()
 
-# Plot several examples of adversarial samples at each epsilon
-cnt = 0
-plt.figure(figsize=(8,10))
-for i in range(len(epsilons)):
-    for j in range(len(examples[i])):
-        cnt += 1
-        plt.subplot(len(epsilons),len(examples[0]),cnt)
-        plt.xticks([], [])
-        plt.yticks([], [])
-        if j == 0:
-            plt.ylabel("Eps: {}".format(epsilons[i]), fontsize=14)
-        orig,adv,ex = examples[i][j]
-        plt.title("{} -> {}".format(orig, adv))
-        plt.imshow(ex, cmap="gray")
-plt.tight_layout()
-plt.show()
+# # Plot several examples of adversarial samples at each epsilon
+# cnt = 0
+# plt.figure(figsize=(8,10))
+# for i in range(len(epsilons)):
+#     for j in range(len(examples[i])):
+#         cnt += 1
+#         plt.subplot(len(epsilons),len(examples[0]),cnt)
+#         plt.xticks([], [])
+#         plt.yticks([], [])
+#         if j == 0:
+#             plt.ylabel("Eps: {}".format(epsilons[i]), fontsize=14)
+#         orig,adv,ex = examples[i][j]
+#         plt.title("{} -> {}".format(orig, adv))
+#         plt.imshow(ex, cmap="gray")
+# plt.tight_layout()
+# plt.show()
