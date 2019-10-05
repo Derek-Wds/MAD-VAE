@@ -15,12 +15,12 @@ def parse_args():
     desc = "DA-VAE for adversarial defense and attack"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=32, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=500, help='Training epoch numbers')
-    parser.add_argument('--h_dim', type=int, default=512, help='Hidden dimensions')
+    parser.add_argument('--epochs', type=int, default=200, help='Training epoch numbers')
+    parser.add_argument('--h_dim', type=int, default=784, help='Hidden dimensions')
     parser.add_argument('--z1_dim', type=int, default=256, help='Latent dimensions for images')
     parser.add_argument('--z2_dim', type=int, default=128, help='Latent dimensions for adversarial noise')
-    parser.add_argument('--image_channels', type=int, default=3, help='Image channels')
-    parser.add_argument('--image_size', type=int, default=256, help='Image size (default to be squared images)')
+    parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
+    parser.add_argument('--image_size', type=int, default=28, help='Image size (default to be squared images)')
     parser.add_argument('--log_dir', type=str, default='logs', help='Logs directory')
     parser.add_argument('--lr', type=float, default=0.0002, help='Learning rate for the Adam optimizer')
     parser.add_argument('--model_dir', type=str, default='pretrained_model', help='Pretrained model directory')
@@ -37,9 +37,9 @@ def main():
 
     # prepare dataset
     transform  = transforms.Compose([transforms.CenterCrop(args.image_size), transforms.ToTensor()])
-    trainSet = datasets.ImageNet(root, split='train', download=True, transform = transform)
-    dataloader = data.DataLoader(trainSet, batch_size=args.batch_size, shuffle=True, num_workers=1)
-    adv_list = ['fgsm', 'i-fgsm', 'mi-fgsm', 'pgd', 'deepfool', 'saliecy-map', 'cw-attack', 'single-pixel', 'simba']
+    trainSet = datasets.MNIST(args.data_root, train=True, download=True, transform=transform)
+    dataloader = torch.utils.data.DataLoader(trainSet, batch_size=args.batch_size, shuffle=True, num_workers=1)
+    adv_list = ['fgsm', 'i-fgsm', 'mi-fgsm', 'pgd', 'deepfool', 'saliecy-map', 'cw-attack', 'simba']
 
     # construct model
     model = DAVAE(args)
@@ -93,7 +93,7 @@ def main():
             if epoch % 20 == 0:
                 torch.save(model.cpu().state_dict(), 'params_{}.pt'.format(epoch))
         
-    torch.save(model.cpu().state_dict(), 'params.pt')
+    # torch.save(model.cpu().state_dict(), 'params.pt')
 
 if __name__ == '__main__':
     main()

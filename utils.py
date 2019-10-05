@@ -29,11 +29,11 @@ def add_adv(image, adv):
 # loss function with 2 reconstruction loss and two KL-divergence loss
 def loss_function(recon, target, adv_recon, adv_target,
                   distribution_1, distribution_2, step, beta=1):
-    CE1 = F.cross_entropy(
+    CE1 = F.binary_cross_entropy(
         recon.view(-1, recon.size(-1)),
         target,
         reduction='elementwise_mean')
-    CE2 = F.cross_entropy(
+    CE2 = F.binary_cross_entropy(
         adv_recon.view(-1, adv_recon.size(-1)),
         adv_target,
         reduction='elementwise_mean')
