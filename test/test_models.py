@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 '''
 Model A
-MNIST accuracy: 0.979700
+MNIST accuracy: 0.993900
 Fashion-MNIST accuracy: 0.923600
 '''
 class model_a(nn.Module):
@@ -31,7 +31,7 @@ class model_a(nn.Module):
 
 '''
 Model B
-MNIST accuracy: 0.991400
+MNIST accuracy: 0.992500
 Fashion-MNIST accuracy: 0.912000
 '''
 class model_b(nn.Module):
@@ -58,7 +58,7 @@ class model_b(nn.Module):
 
 '''
 Model C
-MNIST accuracy: 0.978600
+MNIST accuracy: 0.993800
 Fashion-MNIST accuracy: 0.923000
 '''
 class model_c(nn.Module):
@@ -85,7 +85,7 @@ class model_c(nn.Module):
 
 '''
 Model D
-MNIST accuracy: 0.982100
+MNIST accuracy: 0.981200
 Fashion-MNIST accuracy: 0.889300
 '''
 class model_d(nn.Module):
@@ -108,7 +108,7 @@ class model_d(nn.Module):
 
 '''
 Model E
-MNIST accuracy: 0.981900
+MNIST accuracy: 0.980700
 Fashion-MNIST accuracy: 0.890500
 '''
 class model_e(nn.Module):
