@@ -9,10 +9,8 @@ import foolbox
 import numpy as np
 import matplotlib.pyplot as plt
 from attacks import *
-from test_model import *
+from test_models import *
 
-pretrained_model = "pretrained/lenet_mnist_model.pth" # https://drive.google.com/drive/folders/1fn83DF14tWmit0RTKWRhPq5uVXt73e0h
-use_cuda=True
 
 
 # MNIST Test dataset and dataloader declaration
