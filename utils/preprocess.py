@@ -13,6 +13,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 from torchvision.datasets.mnist import MNIST, FashionMNIST
 from test.attacks import *
+from advertorch.attacks import *
 
 '''
 Classifier for generating the adversarial examples, (similar to the one in MagNet: https://arxiv.org/pdf/1705.09064.pdf)
@@ -53,10 +54,14 @@ class Classifier(nn.Module):
 def add_adv(model, image, label, adv):
     # fast gradient sign method
     if adv == 'fgsm':
-        _, adv_image = fgsm_attack(model, image, label)
+        # _, adv_image = fgsm_attack(model, image, label)
+        fgsm = GradientSignAttack(model)
+        adv_image = fgsm(image, label)
     # iterative fast gradient sign method
     elif adv == 'i-fgsm':
-        _, adv_image = ifgsm_attck(model, image, label)
+        # _, adv_image = ifgsm_attck(model, image, label)
+        ifgsm = LinfBasicIterativeAttack(model)
+        adv_image = ifgsm(image, label)
     # iterative least likely sign method
     elif adv == 'iterll':
         _, adv_image = iterll_attack(model, image, label)
@@ -74,7 +79,9 @@ def add_adv(model, image, label, adv):
         _, adv_image = deepfool_attack(model, image, label)
     # Carlini-Wagner attack
     elif adv == 'cw':
-        _, adv_image = cw_attack(model, image, label)
+        # _, adv_image = cw_attack(model, image, label)
+        cw = CarliniWagnerL2Attack(model, 10, confidence=10, max_iterations=1500)
+        adv_image = cw(image, label)
     # simba attack
     elif adv == 'simba':
         _, adv_image = simba_attack(model, image, label)
@@ -102,8 +109,7 @@ if __name__ == "__main__":
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=3, shuffle=True, num_workers=1)
     image, label = next(iter(dataloader))
     # adversarial methods
-    # adv_list = ['fgsm', 'i-fgsm', 'iterll', 'r-fgsm', 'mi-fgsm', 'pgd', 'deepfool', 'cw', 'simba']
-    adv_list = ['cw', 'simba']
+    adv_list = ['fgsm', 'iterll', 'mi-fgsm', 'pgd', 'deepfool', 'cw']
     # test for accuracy
     for adv in adv_list:
         output, adv_out = add_adv(classifier, image, label, adv)
