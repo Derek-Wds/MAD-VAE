@@ -40,11 +40,11 @@ class ResidualConvBlock(nn.Module):
     def __init__(self, dim, kernel_size=0, stride=1, padding=0):
         super(ResidualConvBlock, self).__init__()
         self.pad1 = nn.ReplicationPad2d(padding)
-        self.conv1 = nn.Conv2d(dim, dim, kernel_size, stride, padding)
+        self.conv1 = nn.Conv2d(dim, dim, kernel_size, stride)
         self.norm1 = nn.InstanceNorm2d(dim)
         self.relu1 = nn.ReLU(True)
         self.pad2 = nn.ReplicationPad2d(padding)
-        self.conv2 = nn.Conv2d(dim, dim, kernel_size, stride, padding)
+        self.conv2 = nn.Conv2d(dim, dim, kernel_size, stride)
         self.norm2 = nn.InstanceNorm2d(dim)
         self.relu2 = nn.ReLU(True)
         self.module = nn.Sequential(self.pad1, self.conv1, self.norm1, self.relu1, self.pad2, self.conv2, self.norm2, self.relu2)
@@ -107,54 +107,54 @@ class DADVAE(nn.Module):
         self.sigma = nn.Linear(self.h_dim, self.z1_dim + self.z2_dim)
         # module for image decoder
         self.linear1 = nn.Linear(self.z1_dim, self.h_dim)
-        self.d1 = DeConvBlock(16, 64, 3, 2, 1)
+        self.d1 = DeConvBlock(16, 64, 4, 2, 1)
         self.d2 = DeConvBlock(64, 128, 3, 1, 1)
         self.r2 = ResidualConvBlock(128, 3, 1, 1)
         self.r3 = ResidualConvBlock(128, 3, 1, 1)
-        self.d3 = DeConvBlock(128, 64, 3, 2, 1)
+        self.d3 = DeConvBlock(128, 64, 4, 2, 1)
         self.d4 = DeConvBlock(64, self.image_channels, 3, 1, 1)
         # module for adversarial decoder
         self.linear2 = nn.Linear(self.z2_dim, self.h_dim)
         self.d5 = DeConvBlock(16, 64, 3, 1, 1)
-        self.d6 = DeConvBlock(64, 128, 3, 2, 1)
+        self.d6 = DeConvBlock(64, 128, 4, 2, 1)
         self.r5 = ResidualConvBlock(128, 3, 1, 1)
-        self.d7 = DeConvBlock(128, 32, 3, 2, 1)
+        self.d7 = DeConvBlock(128, 32, 4, 2, 1)
         self.d8 = DeConvBlock(32, self.image_channels, 3, 1, 1)
 
     # Encoder
     def encode(self, x):
         self.batch_size = x.size(0)
-        self.e_module = nn.Sequential(self.c1, self.c2, self.r1, self.c3, )
+        self.e_module = nn.Sequential(self.c1, self.c2, self.r1, self.c3)
         x = self.e_module(x)
         x = x.view(self.batch_size, -1)
         mean = self.mu(x)
         var = self.sigma(x)
-        distribution_1 = Normal(mean[:, :self.z1_dims], var[:, :self.z1_dims])
-        distribution_2 = Normal(mean[:, self.z1_dims:], var[:, self.z1_dims:])
+        distribution_1 = Normal(mean[:, :self.z1_dim], var[:, :self.z1_dim])
+        distribution_2 = Normal(mean[:, self.z1_dim:], var[:, self.z1_dim:])
 
         return distribution_1, distribution_2
     
     # Decoder for adversarial features
     def adv_decode(self, z):
-        self.batch_size = x.size(0)
+        self.batch_size = z.size(0)
         x = self.linear2(z)
         x = x.view(self.batch_size, 16, 7, 7)
         self.adv_module = nn.Sequential(self.d5, self.d6, self.r5, self.d7, self.d8)
 
-        return self.adv_module(x)
+        return F.sigmoid(self.adv_module(x))
     
     # Decoder for image denoising
     def img_decode(self, z):
-        self.batch_size = x.size(0)
+        self.batch_size = z.size(0)
         x = self.linear1(z)
         x = x.view(self.batch_size, 16, 7, 7)
         self.img_module = nn.Sequential(self.d1, self.d2, self.r2, self.r3, self.d3, self.d4)
 
-        return self.img_module(x)
+        return F.sigmoid(self.img_module(x))
     
     # Forward function
     def forward(self, x):
-        dist1, dist22 = self.encode(x)
+        dist1, dist2 = self.encode(x)
         z1 = dist1.rsample()
         z2 = dist2.rsample()
         output = self.img_decode(z1)
