@@ -201,7 +201,7 @@ def deepfool_attack(model, data, target, num_classes=10, overshoot=0.02, iter_nu
      
     # Start loop
     while (torch.all(torch.eq(init_pred, target))) or (i <= iter_num):
-        pert = torch.tensor([np.inf for b in range(batch_size)]) # Set the initial perturbation to infinite
+        pert = torch.tensor([np.inf for b in range(batch_size)]).to(device) # Set the initial perturbation to infinite
         # Calculate gradient for correct class
         output[list(range(batch_size)), list(I[:, 0])].sum().backward(retain_graph=True)
         original_grad = copy.deepcopy(data.grad.data)

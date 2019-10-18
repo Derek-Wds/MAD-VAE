@@ -91,6 +91,9 @@ def add_adv(model, image, label, adv):
     # if attack fails, return original
     if adv_image is None:
         adv_image = image
+    if torch.cuda.is_available():
+        image = image.cuda()
+        adv_image = adv_image.cuda()
 
     return image, adv_image
 

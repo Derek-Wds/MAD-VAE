@@ -141,7 +141,7 @@ class DADVAE(nn.Module):
         x = x.view(self.batch_size, 16, 7, 7)
         self.adv_module = nn.Sequential(self.d5, self.d6, self.r5, self.d7, self.d8)
 
-        return F.sigmoid(self.adv_module(x))
+        return F.tanh(self.adv_module(x))
     
     # Decoder for image denoising
     def img_decode(self, z):

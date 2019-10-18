@@ -4,13 +4,75 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision.models as models
-from torchvision import datasets, transforms
 import foolbox
 import numpy as np
 import matplotlib.pyplot as plt
 from attacks import *
 from test_models import *
+from torchvision import datasets, transforms
+from foolbox.attacks import *
+from foolbox.models import PyTorchModel
+from utils.preprocess import Classifier
 
+
+# function for construct adversarial one single image
+def attack(model, image, label, adv):
+    # fast gradient sign method, https://arxiv.org/abs/1412.6572
+    if adv == 'fgsm':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        fgsm_attack = FGSM(model)
+        adv_image = fgsm_attack(image, label)
+    # interative fast gradient sign method, https://arxiv.org/pdf/1607.02533.pdf
+    elif adv == 'i-fgsm':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        ifgsm_attack = LinfinityBasicIterativeAttack(model, distance=foolbox.distances.Linfinity)
+        adv_image = ifgsm_attack(image, label, epsilon=0.3, iterations=10, random_start=True)
+    # momentum iterative fast gradient sign method, https://arxiv.org/pdf/1710.06081.pdf
+    elif adv == 'mi-fgsm':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        mifgsm_attack = MomentumIterativeAttack(model, distance=foolbox.distances.Linfinity)
+        adv_image = mifgsm_attack(image, label, epsilon=0.3, iterations=10, random_start=True)
+    # projected gradient descent, https://arxiv.org/pdf/1706.06083.pdf
+    elif adv == 'pgd':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        pgd_attack = RandomPGD(model, distance=foolbox.distances.Linfinity)
+        adv_image = pgd_attack(image, label, epsilon=0.3, iterations=40, random_start=True)
+    # deepfool attack, https://arxiv.org/pdf/1511.04599.pdf
+    elif adv == 'deepfool':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        deepfool_attack = DeepFoolL2Attack(model)
+        adv_image = deepfool_attack(image, label, steps=50)
+    # ADef attack, https://arxiv.org/abs/1804.07729
+    elif adv == 'adef':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        adef_attack = ADefAttack(model)
+        adv_image = adef_attack(image, label)
+    # Carlini-Wagner attack, https://arxiv.org/abs/1608.04644
+    elif adv == 'cw-attack':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        cw_attack = CarliniWagnerL2Attack(model)
+        adv_image = cw_attack(image, label, max_iterations=200)
+    # spatial attack, http://arxiv.org/abs/1712.02779
+    elif adv == 'spatial':
+        image, label = image.numpy(), label.numpy()
+        model = PyTorchModel(model, bounds=(0, 1), num_classes=10)
+        spatial_attack = SpatialAttack(model)
+        adv_image = spatial_attack(image, label)
+    else:
+        adv_image = image
+        print('Did not perform attack on the images!')
+    # if attack fails, return original
+    if adv_image is None:
+        adv_image = image
+
+    return image, adv_image
 
 
 # MNIST Test dataset and dataloader declaration
@@ -102,3 +164,29 @@ for i in range(len(epsilons)):
         plt.imshow(ex, cmap="gray")
 plt.tight_layout()
 plt.show()
+
+
+if __name__ == "__main__":
+    # get arguments
+    from main import parse_args
+    args = parse_args()
+    # init and load model
+    classifier = Classifier(args)
+    classifier.load_state_dict(torch.load('../pretrained_model/classifier_mnist.pt'))
+    classifier.eval()
+    # init dataset
+    transform  = transforms.Compose([transforms.CenterCrop(args.image_size), transforms.ToTensor()])
+    dataset = datasets.MNIST('../data', train=True, download=True, transform=transform)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=1)
+    image, label = next(iter(dataloader))
+    # adversarial methods
+    adv_list = ['fgsm', 'i-fgsm', 'mi-fgsm', 'pgd', 'deepfool', 'adef', 'cw-attack', 'spatial']
+    # test for accuracy
+    for adv in adv_list:
+        output, adv_out = attack(classifier, image[22], label[22], adv)
+        output = classifier(torch.from_numpy(output).unsqueeze(0))
+        adv_out = classifier(torch.from_numpy(adv_out).unsqueeze(0))
+        print('attack method {}'.format(adv))
+        print('actual class ', np.argmax(output.detach().numpy()))
+        print('adversarial class ', np.argmax(adv_out.detach().numpy()))
+        print('========================')

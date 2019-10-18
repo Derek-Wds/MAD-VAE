@@ -8,18 +8,7 @@ from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 from torchvision.datasets.mnist import MNIST, FashionMNIST
 from test_models import *
-
-# scheduler to decay the learning rate
-class MinExponentialLR(ExponentialLR):
-    def __init__(self, optimizer, gamma, minimum, last_epoch=-1):
-        self.min = minimum
-        super(MinExponentialLR, self).__init__(optimizer, gamma, last_epoch=-1)
-
-    def get_lr(self):
-        return [
-            max(base_lr * self.gamma**self.last_epoch, self.min)
-            for base_lr in self.base_lrs
-        ]
+from utils.scheduler import MinExponentialLR
 
 # init dataset
 transform  = transforms.Compose([transforms.CenterCrop(28), transforms.ToTensor()])
@@ -71,8 +60,8 @@ def test():
             avg_losses[i] += criterion(output, labels).sum()
             pred = output.detach().max(1)[1]
             total_corrects[i] += pred.eq(labels.view_as(pred)).sum()
-        avg_losses[i] /= len(data_test)
-        print('%s test Avg. Loss: %f, Accuracy: %f' % (models[i].name, avg_losses[i].detach().cpu().item(), float(total_corrects[i]) / len(data_test)))
+        avg_losses[i] /= len(test_data)
+        print('%s test Avg. Loss: %f, Accuracy: %f' % (models[i].name, avg_losses[i].detach().cpu().item(), float(total_corrects[i]) / len(test_data)))
 
 # main function
 def main():
