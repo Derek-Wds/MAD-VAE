@@ -15,8 +15,8 @@ def recon_loss_function(recon, target, adv_recon, adv_target,
         recon.view(-1, recon.size(-1)),
         target,
         reduction='elementwise_mean')
-    CE2 = F.binary_cross_entropy(
-        adv_recon.view(-1, adv_recon.size(-1)),
+    CE2 = F.mse_loss(
+        adv_recon,
         adv_target.detach(),
         reduction='elementwise_mean')
     normal1 = Normal(
