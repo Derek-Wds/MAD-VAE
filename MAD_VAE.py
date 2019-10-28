@@ -52,10 +52,10 @@ class ResidualConvBlock(nn.Module):
     def forward(self, x):
         return x + self.module(x)
 
-# Main class for DAD-VAE
-class DADVAE(nn.Module):
+# Main class for MAD-VAE
+class MADVAE(nn.Module):
     def __init__(self, args):
-        super(DADVAE, self).__init__()
+        super(MADVAE, self).__init__()
         self.model_name = 'DAD-VAE'
         self.image_size = args.image_size
         self.image_channels = args.image_channels

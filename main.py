@@ -7,7 +7,7 @@ import torchvision.models as models
 from torch.distributions import kl_divergence, Normal
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
-from DAD_VAE import *
+from MAD_VAE import *
 from utils.loss_function import *
 from utils.preprocess import *
 from utils.scheduler import *
@@ -48,26 +48,20 @@ def main():
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=1)
 
     # construct model and classifier
-    model = DADVAE(args)
+    model = MADVAE(args)
     classifier = Classifier(args)
-    discriminator = Discriminator(args)
     if args.gpu_num > 1:
         model = torch.nn.DataParallel(model, device_ids=range(args.gpu_num))
         classifier = torch.nn.DataParallel(classifier, device_ids=range(args.gpu_num))
-        discriminator = torch.nn.DataParallel(discriminator, device_ids=range(args.gpu_num))
         model = model.module
         classifier = classifier.module
-        discriminator = discriminator.module
     if torch.cuda.is_available():
         model = model.cuda()
         classifier = classifier.cuda()
-        discriminator = discriminator.cuda()
         print('Using: ', torch.cuda.get_device_name(torch.cuda.current_device()))
     model.train()
     classifier.load_state_dict(torch.load('pretrained_model/classifier_mnist.pt'))
     classifier.eval()
-    discriminator.load_state_dict(torch.load('pretrained_model/discriminator_mnist.pt'))
-    discriminator.eval()
 
     # construct optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
