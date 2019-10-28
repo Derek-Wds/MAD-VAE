@@ -52,42 +52,6 @@ class ResidualConvBlock(nn.Module):
     def forward(self, x):
         return x + self.module(x)
 
-# Discriminator
-class Discriminator(nn.Module):
-    def __init__(self, args):
-        super(Discriminator, self).__init__()
-        self.model_name = 'Discriminator'
-        self.image_size = args.image_size
-        self.image_channels = args.image_channels
-        self.c1 = nn.Conv2d(self.image_channels, 64, 3, 1, 1)
-        self.lrelu1 = nn.LeakyReLU(0.2, True)
-        self.c2 = nn.Conv2d(64, 128, 3, 1, 1)
-        self.ins1 = nn.InstanceNorm2d(128)
-        self.lrelu2 = nn.LeakyReLU(0.2, True)
-        self.c3 = nn.Conv2d(128, 64, 5, 2, 0)
-        self.lrelu3 = nn.LeakyReLU(0.2, True)
-        self.c4 = nn.Conv2d(64, 32, 3, 1, 0)
-        self.ins2 = nn.InstanceNorm2d(32)
-        self.lrelu4 = nn.LeakyReLU(0.2, True)
-        self.fc1 = nn.Linear(3200, 256)
-        self.fc2 = nn.Linear(256, 2)
-        self.module1 = nn.Sequential(self.c1, self.lrelu1, self.c2, self.ins1, self.lrelu2)
-        self.module2 = nn.Sequential(self.c3, self.lrelu3, self.c4, self.ins2, self.lrelu4)
-        self.dropout = nn.Dropout2d(p=0.25)
-    
-    def forward(self, x):
-        self.batch_size = x.size(0)
-        x = self.module1(x) + x
-        x = self.dropout(x)
-        x = self.module2(x)
-        x = x.view(self.batch_size, -1)
-        x = F.dropout(x, training=self.training)
-        x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
-
-        return F.log_softmax(x, dim=1)
-
 # Main class for DAD-VAE
 class DADVAE(nn.Module):
     def __init__(self, args):
