@@ -15,14 +15,12 @@ from utils.dataset import *
 
 # argument parser
 def parse_args():
-    desc = "DA-VAE for adversarial defense and attack"
+    desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
-    parser.add_argument('--batch_size', type=int, default=32, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=300, help='Training epoch numbers')
-    parser.add_argument('--init_epochs', type=int, default=100, help='Epoch numbers start training Discriminator')
-    parser.add_argument('--h_dim', type=int, default=784, help='Hidden dimensions')
-    parser.add_argument('--z1_dim', type=int, default=256, help='Latent dimensions for images')
-    parser.add_argument('--z2_dim', type=int, default=128, help='Latent dimensions for adversarial noise')
+    parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
+    parser.add_argument('--epochs', type=int, default=500, help='Training epoch numbers')
+    parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
+    parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
     parser.add_argument('--image_size', type=int, default=28, help='Image size (default to be squared images)')
     parser.add_argument('--log_dir', type=str, default='logs', help='Logs directory')
@@ -65,28 +63,25 @@ def main():
 
     # construct optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = MinExponentialLR(optimizer, gamma=0.95, minimum=1e-5)
+    scheduler = MinExponentialLR(optimizer, gamma=0.99999, minimum=1e-5)
 
     # summary writer for tensorboard
     writer1 = SummaryWriter(args.log_dir+'/reon_loss')
     writer2 = SummaryWriter(args.log_dir+'/img_loss')
-    writer3 = SummaryWriter(args.log_dir+'/adv_loss')
-    writer4 = SummaryWriter(args.log_dir+'/classification_loss')
+    writer3 = SummaryWriter(args.log_dir+'/kl_loss')
     
     # tratinig steps
     step = 0
     for epoch in range(1, args.epochs+1):
         print('Epoch: {}'.format(epoch))
+        recon_losses = list()
+        img_losses = list()
+        kl_losses = list()
+        outputs = list()
         # loop for each data pairs
         for data, adv_data in dataloader:
             # initialize
             step += 1
-            recon_losses = list()
-            img_losses = list()
-            adv_losses = list()
-            classification_losses = list()
-            outputs = list()
-            adv_outputs = list()
             if torch.cuda.is_available():
                 model = model.cuda()
                 data = data.cuda()
@@ -96,16 +91,11 @@ def main():
             optimizer.zero_grad()
 
             # get data and run model
-            output, adv_output, ds1m, ds1s, ds2m, ds2s = model(data)
-            distribution1, distribution2 = Normal(ds1m, ds1s), Normal(ds2m, ds2s)
+            output, dsm, dss = model(data)
+            distribution = Normal(dsm, dss)
 
             # calculate losses
-            recon_loss, recon_1, recon_2 = recon_loss_function(output, data, adv_output, adv_data, distribution1, distribution2, step, 0.1)
-            if epoch >= args.init_epochs:
-                classification_loss = classification_loss_function(discriminator, adv_data, output, adv_output)
-                loss = recon_loss + args.loss_weight * classification_loss
-            else:
-                loss = recon_loss
+            loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
             loss.backward()
 
             # clip for gradient
@@ -115,33 +105,28 @@ def main():
             optimizer.step()
 
             # record results
-            recon_losses.append(recon_loss.item())
-            img_losses.append(recon_1.item())
-            adv_losses.append(recon_2.item())
-            if epoch >= args.init_epochs:
-                classification_losses.append(classification_loss.item())
+            recon_losses.append(loss.item())
+            img_losses.append(img_recon.item())
+            kl_losses.append(kld.item())
             outputs.append(output)
-            adv_outputs.append(adv_output)
         
         # write to tensorboard
         writer1.add_scalar('recon_loss', np.sum(recon_losses)/len(recon_losses), step)
         writer2.add_scalar('img_loss', np.sum(img_losses)/len(img_losses), step)
-        writer3.add_scalar('adv_loss', np.sum(adv_losses)/len(adv_losses), step)
-        writer4.add_scalar('classification_loss', np.sum(classification_losses)/len(classification_losses), step)
-        if step % 50 == 0:
+        writer3.add_scalar('kl_loss', np.sum(kl_losses)/len(kl_losses), step)
+        if step % 1000 == 0:
             writer1.add_image('original data', data[0], step)
             for i in range(len(outputs)):
                 writer1.add_image("reconstruct data {}".format(i), outputs[i][0], step)
-                writer1.add_image("adversarial noise {}".format(i), adv_outputs[i][0], step)
 
         # print out loss
         if step % 50 == 0:
-            print("batch {}'s img_recon loss: {:.5f} adv_recon loss: {:.5f} recon loss: {:.5f}, classification loss: {:.5f}"\
-                .format(step, np.sum(img_losses)/len(img_losses), np.sum(adv_losses)/len(adv_losses),\
-                        np.sum(recon_losses)/len(recon_losses), np.sum(classification_losses)/len(classification_losses)))
+            print("batch {}'s img_recon loss: {:.5f}, recon loss: {:.5f}, kl loss: {:.5f}"\
+                .format(step, np.sum(img_losses)/len(img_losses), np.sum(recon_losses)/len(recon_losses),\
+                     np.sum(kl_losses)/len(kl_losses)))
 
         # step scheduler
-        if step % 50 == 0:
+        if step % 1000 == 0:
             scheduler.step()
 
         # save model parameters
