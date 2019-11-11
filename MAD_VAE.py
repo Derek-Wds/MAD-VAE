@@ -69,7 +69,7 @@ class MADVAE(nn.Module):
         self.mu =nn.Linear(self.h_dim, self.z_dim)
         self.sigma = nn.Linear(self.h_dim, self.z_dim)
         # module for image decoder
-        self.linear1 = nn.Linear(self.z_dim, self.h_dim)
+        self.linear = nn.Linear(self.z_dim, self.h_dim)
         self.d1 = DeConvBlock(256, 128, 4, 2, 1)
         self.d2 = DeConvBlock(128, 64, 4, 2, 1)
         self.d3 = DeConvBlock(64, 64, 4, 2, 3)
@@ -90,7 +90,7 @@ class MADVAE(nn.Module):
     # Decoder for image denoising
     def img_decode(self, z):
         self.batch_size = z.size(0)
-        x = self.linear1(z)
+        x = self.linear(z)
         x = x.view(self.batch_size, 256, 4, 4)
         self.img_module = nn.Sequential(self.d1, self.d2, self.d3, self.d4)
 
@@ -102,4 +102,4 @@ class MADVAE(nn.Module):
         z = dist.rsample()
         output = self.img_decode(z)
         
-        return output, dist.mean, dist.stddev
+        return output, dist.mean, dist.stddev, z

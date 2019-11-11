@@ -24,9 +24,9 @@ def parse_args():
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
     parser.add_argument('--image_size', type=int, default=28, help='Image size (default to be squared images)')
     parser.add_argument('--num_classes', type=int, default=10, help='Number of image classes')
-    parser.add_argument('--log_dir', type=str, default='logs', help='Logs directory')
+    parser.add_argument('--log_dir', type=str, default='pd_logs', help='Logs directory')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate for the Adam optimizer')
-    parser.add_argument('--closs_weight', type=float, default=10, help='Weight for classification loss functions')
+    parser.add_argument('--closs_weight', type=float, default=0.5, help='Weight for classification loss functions')
     parser.add_argument('--ploss_weight', type=float, default=0.5, help='Weight for proximity loss functions')
     parser.add_argument('--dloss_weight', type=float, default=0.0001, help='Weight for distance loss functions')
     parser.add_argument('--data_root', type=str, default='data', help='Data directory')
@@ -54,8 +54,7 @@ def main():
     writer1 = SummaryWriter(args.log_dir+'/reon_loss')
     writer2 = SummaryWriter(args.log_dir+'/img_loss')
     writer3 = SummaryWriter(args.log_dir+'/kl_loss')
-    writer4 = SummaryWriter(args.log_dir+'/c_loss')
-    writer5 = SummaryWriter(args.log_dir+'/pd_loss')
+    writer4 = SummaryWriter(args.log_dir+'/pd_loss')
 
     # create modules needed
     model, proximity, distance, classifier, optimizer, scheduler,\
@@ -65,15 +64,14 @@ def main():
     step = 0
     for epoch in range(1, args.epochs+1):
         print('Epoch: {}'.format(epoch))
-        recon_losses, img_losses, kl_losses, c_losses, pd_losses, outputs, step = \
+        recon_losses, img_losses, kl_losses, pd_losses, outputs, step = \
             train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step)
         
         # write to tensorboard
         writer1.add_scalar('recon_loss', np.sum(recon_losses)/len(recon_losses), step)
         writer2.add_scalar('img_loss', np.sum(img_losses)/len(img_losses), step)
         writer3.add_scalar('kl_loss', np.sum(kl_losses)/len(kl_losses), step)
-        writer4.add_scalar('c_loss', np.sum(c_losses)/len(c_losses), step)
-        writer5.add_scalar('pd_loss', np.sum(pd_losses)/len(pd_losses), step)
+        writer4.add_scalar('pd_loss', np.sum(pd_losses)/len(pd_losses), step)
         if step % 300 == 0:
             for i in range(args.batch_size):
                 writer1.add_image('original data', datas[i][0], step)
@@ -92,9 +90,9 @@ def main():
 
         # save model parameters
         if epoch % 5 == 0:
-            torch.save(model.cpu().state_dict(), '{}/combined/params_{}.pt'.format(args.model_dir, epoch))
+            torch.save(model.cpu().state_dict(), '{}/proxi_dist/params_{}.pt'.format(args.model_dir, epoch))
         
-    torch.save(model.cpu().state_dict(), '{}/combined/params.pt'.format(args.model_dir))
+    torch.save(model.cpu().state_dict(), '{}/proxi_dist/params.pt'.format(args.model_dir))
 
 # training function
 def train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step):
@@ -102,7 +100,6 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
     recon_losses = list()
     img_losses = list()
     kl_losses = list()
-    c_losses = list()
     pd_losses = list()
     outputs = list()
     # loop for each data pairs
@@ -126,10 +123,9 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
 
         # calculate losses
         r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
-        c_loss = classification_loss(output, label, classifier)
         p_loss = proximity(z, label)
         d_loss = distance(z, label)
-        loss = r_loss + args.closs_weight * c_loss + args.ploss_weight * p_loss - args.dloss_weight * d_loss
+        loss = r_loss + + args.pdloss_weight * (p_loss - d_loss)
         loss.backward()
 
         # clip for gradient
@@ -146,11 +142,10 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         recon_losses.append(loss.item())
         img_losses.append(img_recon.item())
         kl_losses.append(kld.item())
-        c_losses.append(c_loss.item())
         pd_losses.append(p_loss.item() - d_loss.item())
         outputs.append(output)
     
-    return recon_losses, img_losses, kl_losses, c_losses, pd_losses, outputs, step
+    return recon_losses, img_losses, kl_losses, pd_losses, outputs, step
 
 # init models to be used
 def init_models(args):

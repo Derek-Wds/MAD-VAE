@@ -1,7 +1,10 @@
 # Ideas
-* Paper: [https://arxiv.org/pdf/1909.08072.pdf](https://arxiv.org/pdf/1909.08072.pdf)
-* Use VAE to denoise.
-* Use robust manifold defenses.
+- Paper: [https://arxiv.org/pdf/1909.08072.pdf](https://arxiv.org/pdf/1909.08072.pdf)
+- Use VAE to denoise.
+- Use robust manifold defenses
+- Loss function: CE + a * KLD + class_error(real) - sum(class_error(other)) + proximity_loss - distance_loss
+    - Proximity loss: [https://arxiv.org/pdf/1904.00887.pdf](https://arxiv.org/pdf/1904.00887.pdf), K-Means
+    - Topological loss: [https://arxiv.org/pdf/1909.03334.pdf](https://arxiv.org/pdf/1909.03334.pdf)
 
 Test Case:
 * Use pytorch pretrained CNN as classifier, and use ImageNet as dataset

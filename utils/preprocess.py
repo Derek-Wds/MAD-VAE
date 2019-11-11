@@ -114,11 +114,31 @@ if __name__ == "__main__":
     # adversarial methods
     adv_list = ['fgsm', 'iterll', 'mi-fgsm', 'pgd', 'deepfool', 'cw']
     # test for accuracy
-    for adv in adv_list:
-        output, adv_out = add_adv(classifier, image, label, adv)
-        output = classifier(output)
-        adv_out = classifier(adv_out)
-        print('attack method {}'.format(adv))
-        print('actual class ', torch.argmax(output, 1))
-        print('adversarial class ', torch.argmax(adv_out, 1))
-        print('====================================')
+    xs = list()
+    ys = list()
+    advs = list()
+    batch = 0
+    for image, label in dataloader:
+        image = image.cuda()
+        label = label.cuda()
+        batch += 1
+        print(batch)
+        for adv in adv_list:
+            output, adv_out = add_adv(classifier, image, label, adv)
+            output = classifier(output)
+            adv_out = classifier(adv_out)
+            print('attack method {}'.format(adv))
+            print('actual class ', torch.argmax(output, 1))
+            print('adversarial class ', torch.argmax(adv_out, 1))
+            print('====================================')
+            xs.append(image.cpu().detach().numpy())
+            ys.append(label.cpu().detach().numpy())
+            advs.append(adv_out.cpu().detach().numpy())
+
+    adv_x = np.concatenate(advs, axis=0)
+    xt = np.concatenate(xs, axis=0)
+    yt = np.concatenate(ys, axis=0)
+
+    np.save('../data/' + 'advs_mnist.npy', adv_x)
+    np.save('../data/' + 'xs_mnist.npy', xt)
+    np.save('../data/' + 'ys_mnist.npy', yt)
