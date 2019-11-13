@@ -72,21 +72,18 @@ def main():
         writer2.add_scalar('img_loss', np.sum(img_losses)/len(img_losses), step)
         writer3.add_scalar('kl_loss', np.sum(kl_losses)/len(kl_losses), step)
         writer4.add_scalar('pd_loss', np.sum(pd_losses)/len(pd_losses), step)
-        if step % 300 == 0:
-            for i in range(args.batch_size):
-                writer1.add_image('original data', datas[i][0], step)
-                writer1.add_image('adv data', adv_datas[i][0], step)
-                writer1.add_image("reconstruct data", outputs[i][0], step)
+        for i in range(args.batch_size):
+            writer1.add_image('original data', datas[i][0], step)
+            writer1.add_image('adv data', adv_datas[i][0], step)
+            writer1.add_image("reconstruct data", outputs[i][0], step)
 
         # print out loss
-        if step % 50 == 0:
-            print("batch {}'s img_recon loss: {:.5f}, recon loss: {:.5f}, kl loss: {:.5f}"\
-                .format(step, np.sum(img_losses)/len(img_losses), np.sum(recon_losses)/len(recon_losses),\
-                     np.sum(kl_losses)/len(kl_losses)))
+        print("batch {}'s img_recon loss: {:.5f}, recon loss: {:.5f}, kl loss: {:.5f}"\
+            .format(step, np.sum(img_losses)/len(img_losses), np.sum(recon_losses)/len(recon_losses),\
+                    np.sum(kl_losses)/len(kl_losses)))
 
         # step scheduler
-        if step % 200 == 0:
-            scheduler.step()
+        scheduler.step()
 
         # save model parameters
         if epoch % 5 == 0:
@@ -101,6 +98,8 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
     img_losses = list()
     kl_losses = list()
     pd_losses = list()
+    datas = list()
+    adv_datas = list()
     outputs = list()
     # loop for each data pairs
     for data, label, adv_data in dataloader:
@@ -125,7 +124,7 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
         p_loss = proximity(z, label)
         d_loss = distance(z, label)
-        loss = r_loss + + args.pdloss_weight * (p_loss - d_loss)
+        loss = r_loss + + args.ploss_weight * p_loss - args.dloss_weight * d_loss
         loss.backward()
 
         # clip for gradient
@@ -144,8 +143,10 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         kl_losses.append(kld.item())
         pd_losses.append(p_loss.item() - d_loss.item())
         outputs.append(output)
+        datas.append(data)
+        adv_datas.append(adv_data)
     
-    return recon_losses, img_losses, kl_losses, pd_losses, outputs, step
+    return recon_losses, img_losses, kl_losses, pd_losses, datas, adv_datas, outputs, step
 
 # init models to be used
 def init_models(args):
@@ -182,11 +183,11 @@ def init_models(args):
 
     # construct optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-    scheduler = MinExponentialLR(optimizer, gamma=0.99999, minimum=1e-5)
+    scheduler = MinExponentialLR(optimizer, gamma=0.998, minimum=1e-5)
     optimizer1 = optim.Adam(proximity.parameters(), lr=args.lr)
-    scheduler1 = MinExponentialLR(optimizer1, gamma=0.99999, minimum=1e-5)
+    scheduler1 = MinExponentialLR(optimizer1, gamma=0.998, minimum=1e-5)
     optimizer2 = optim.Adam(distance.parameters(), lr=args.lr)
-    scheduler2 = MinExponentialLR(optimizer2, gamma=0.99999, minimum=1e-5)
+    scheduler2 = MinExponentialLR(optimizer2, gamma=0.998, minimum=1e-5)
 
     return model, proximity, distance, classifier, optimizer, scheduler,\
          optimizer1, scheduler1, optimizer2, scheduler2
