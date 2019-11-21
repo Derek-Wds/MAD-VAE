@@ -34,7 +34,7 @@ def parse_args():
     parser.add_argument('--model_dir', type=str, default='pretrained_model', help='Pretrained model directory')
     parser.add_argument('--use_gpu', type=bool, default=True, help='If use GPU for training')
     parser.add_argument('--gpu_num', type=int, default=1, choices=range(0,5), help='GPU numbers available for parallel training')
-
+    parser.add_argument('--experiment', type=int, default=0, choices=range(0,4))
     return parser.parse_args()
 
 
@@ -131,7 +131,16 @@ if __name__ == "__main__":
     classifier = classifier.cuda()
 
     defense = MADVAE(args)
-    defense_pt = torch.load('../pretrained_model/vanilla/params.pt')
+
+    # for running parallel experiments
+    experiments = [
+        'vanilla',
+        'combined',
+        'proxi_dist',
+        'classification'
+    ]
+
+    defense_pt = torch.load(f'../pretrained_model/{experiments[args.experiment]}/params.pt')
     # for key in list(defense_pt.keys()):
         # defense_pt[key.replace('module.', '')] = defense_pt.pop(key)
     defense.load_state_dict(defense_pt, strict=False)
@@ -172,7 +181,7 @@ if __name__ == "__main__":
         adv_accuracy[adv] = true / int(total)
 
     
-    with open("./accuracy_vanilla.txt", 'w') as f:
+    with open(f'./accuracy_{experiments[args.experiment]}.txt', 'w') as f:
         json.dump(adv_accuracy, f)
 
 
