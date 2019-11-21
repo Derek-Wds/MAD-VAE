@@ -178,7 +178,7 @@ if __name__ == "__main__":
 
             true += torch.sum(torch.eq(true_class, adversarial_class))
 
-        adv_accuracy[adv] = true / int(total)
+        adv_accuracy[adv] = int(true) / total
 
     
     with open(f'./accuracy_{experiments[args.experiment]}.txt', 'w') as f:
