@@ -18,8 +18,8 @@ def parse_args():
     desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=30, help='Training epoch numbers')
-    parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
+    parser.add_argument('--epochs', type=int, default=5, help='Training epoch numbers')
+    parser.add_argument('--h_dim', type=int, default=2048, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
     parser.add_argument('--image_size', type=int, default=28, help='Image size (default to be squared images)')
