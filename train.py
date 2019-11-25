@@ -18,7 +18,7 @@ def parse_args():
     desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=500, help='Training epoch numbers')
+    parser.add_argument('--epochs', type=int, default=30, help='Training epoch numbers')
     parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
@@ -80,9 +80,9 @@ def main():
 
         # save model parameters
         if epoch % 5 == 0:
-            torch.save(model.cpu().state_dict(), '{}/vanilla/params_{}.pt'.format(args.model_dir, epoch))
+            torch.save(model.state_dict(), '{}/vanilla/params_{}.pt'.format(args.model_dir, epoch))
         
-    torch.save(model.cpu().state_dict(), '{}/vanilla/params.pt'.format(args.model_dir))
+    torch.save(model.state_dict(), '{}/vanilla/params.pt'.format(args.model_dir))
 
 # training function
 def train(args, dataloader, model, optimizer, step):
@@ -122,12 +122,12 @@ def train(args, dataloader, model, optimizer, step):
         optimizer.step()
 
         # record results
-        recon_losses.append(loss.item())
-        img_losses.append(img_recon.item())
-        kl_losses.append(kld.item())
-        outputs.append(output)
-        datas.append(data)
-        adv_datas.append(adv_data)
+        recon_losses.append(loss.cpu().item())
+        img_losses.append(img_recon.cpu().item())
+        kl_losses.append(kld.cpu().item())
+        outputs.append(output.cpu())
+        datas.append(data.cpu())
+        adv_datas.append(adv_data.cpu())
     
     return recon_losses, img_losses, kl_losses, datas, adv_datas, outputs, step
 
