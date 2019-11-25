@@ -18,7 +18,7 @@ def parse_args():
     desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=500, help='Training epoch numbers')
+    parser.add_argument('--epochs', type=int, default=30, help='Training epoch numbers')
     parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
@@ -88,9 +88,9 @@ def main():
 
         # save model parameters
         if epoch % 5 == 0:
-            torch.save(model.cpu().state_dict(), '{}/combined/params_{}.pt'.format(args.model_dir, epoch))
+            torch.save(model.state_dict(), '{}/combined/params_{}.pt'.format(args.model_dir, epoch))
         
-    torch.save(model.cpu().state_dict(), '{}/combined/params.pt'.format(args.model_dir))
+    torch.save(model.state_dict(), '{}/combined/params.pt'.format(args.model_dir))
 
 # training function
 def train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step):
@@ -141,14 +141,14 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         optimizer2.step()
 
         # record results
-        recon_losses.append(loss.item())
-        img_losses.append(img_recon.item())
-        kl_losses.append(kld.item())
-        c_losses.append(c_loss.item())
-        pd_losses.append(p_loss.item() - d_loss.item())
-        outputs.append(output)
-        datas.append(data)
-        adv_datas.append(adv_data)
+        recon_losses.append(loss.cpu().item())
+        img_losses.append(img_recon.cpu().item())
+        kl_losses.append(kld.cpu().item())
+        c_losses.append(c_loss.cpu().item())
+        pd_losses.append(p_loss.cpu().item() - d_loss.cpu().item())
+        outputs.append(output.cpu())
+        datas.append(data.cpu())
+        adv_datas.append(adv_data.cpu())
     
     return recon_losses, img_losses, kl_losses, c_losses, pd_losses, datas, adv_datas, outputs, step
 

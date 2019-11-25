@@ -66,6 +66,7 @@ class MADVAE(nn.Module):
         self.c2 = ConvBlock(64, 64, 4, 2, 3)
         self.c3 = ConvBlock(64, 128, 4, 2, 1)
         self.c4 = ConvBlock(128, 256, 4, 2, 1)
+        self.e_module = nn.Sequential(self.c1, self.c2, self.c3, self.c4)
         self.mu =nn.Linear(self.h_dim, self.z_dim)
         self.sigma = nn.Linear(self.h_dim, self.z_dim)
         # module for image decoder
@@ -74,11 +75,11 @@ class MADVAE(nn.Module):
         self.d2 = DeConvBlock(128, 64, 4, 2, 1)
         self.d3 = DeConvBlock(64, 64, 4, 2, 3)
         self.d4 = DeConvBlock(64, self.image_channels, 5, 1, 2)
+        self.img_module = nn.Sequential(self.d1, self.d2, self.d3, self.d4)
 
     # Encoder
     def encode(self, x):
         self.batch_size = x.size(0)
-        self.e_module = nn.Sequential(self.c1, self.c2, self.c3, self.c4)
         x = self.e_module(x)
         x = x.view(self.batch_size, -1)
         mean = self.mu(x)
@@ -92,7 +93,6 @@ class MADVAE(nn.Module):
         self.batch_size = z.size(0)
         x = self.linear(z)
         x = x.view(self.batch_size, 256, 4, 4)
-        self.img_module = nn.Sequential(self.d1, self.d2, self.d3, self.d4)
 
         return F.sigmoid(self.img_module(x))
     
