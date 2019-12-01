@@ -90,13 +90,20 @@ def add_adv(model, image, label, adv):
         _, adv_image = iterll_attack(model, image, label)
     # random fast gradient sign method
     elif adv == 'r-fgsm':
-        _, adv_image = rfgsm_attck(model, image, label)
+        #_, adv_image = rfgsm_attck(model, image, label)
+        alpha = 0.05
+        data = torch.clamp(image + alpha * torch.empty(image.shape).normal_(mean=0,std=1).cuda(), min=0, max=1)
+        fgsm = GradientSignAttack(model, eps=0.3-alpha)
+        adv_image = fgsm(data, label)
     # momentum iterative fast gradient sign method
     elif adv == 'mi-fgsm':
-        _, adv_image = mifgsm_attack(model, image, label)
+        mifgsm = MomentumIterativeAttack(model)
+        adv_image = mifgsm(image, label)
     # projected gradient sign method
     elif adv == 'pgd':
-        _, adv_image = pgd_attack(model, image, label)
+        #_, adv_image = pgd_attack(model, image, label)
+        pgd = L2PGDAttack(model)
+        adv_image = pgd(image, label)
     # deepfool attack method
     elif adv == 'deepfool':
         _, adv_image = deepfool_attack(model, image, label)
@@ -154,7 +161,7 @@ if __name__ == "__main__":
     image, label = next(iter(dataloader))
 
     # adversarial methods
-    adv_accuracy = {'fgsm': 0, 'iterll': 0, 'mi-fgsm': 0, 'pgd': 0, 'cw': 0}
+    adv_accuracy = {'fgsm': 0, 'r-fgsm': 0, 'cw': 0}
 
     # test for accuracy
     for adv in adv_accuracy:
