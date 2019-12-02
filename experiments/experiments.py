@@ -158,7 +158,6 @@ if __name__ == "__main__":
     transform  = transforms.Compose([transforms.CenterCrop(args.image_size), transforms.ToTensor()])
     dataset = datasets.MNIST('../data', train=False, download=True, transform=transform)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=256, shuffle=True, num_workers=1)
-    image, label = next(iter(dataloader))
 
     # adversarial methods
     adv_accuracy = {'fgsm': 0, 'r-fgsm': 0, 'cw': 0}
