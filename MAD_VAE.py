@@ -9,7 +9,7 @@ from torch.distributions import Normal
 class ConvBlock(nn.Module):
     def __init__(self, in_dim, out_dim, kernel_size=0, stride=1, padding=0):
         super(ConvBlock, self).__init__()
-        self.conv = nn.Conv2d(in_dim, out_dim, kernel_size, stride, padding)
+        self.conv = nn.Conv2d(in_dim, out_dim, kernel_size, stride, padding, bias=False)
         self.norm = nn.BatchNorm2d(out_dim)
         self.relu = nn.ReLU(True)
     
@@ -24,7 +24,7 @@ class ConvBlock(nn.Module):
 class DeConvBlock(nn.Module):
     def __init__(self, in_dim, out_dim, kernel_size=0, stride=1, padding=0, out_padding=0):
         super(DeConvBlock, self).__init__()
-        self.conv = nn.ConvTranspose2d(in_dim, out_dim, kernel_size, stride, padding, out_padding)
+        self.conv = nn.ConvTranspose2d(in_dim, out_dim, kernel_size, stride, padding, out_padding, bias=False)
         self.norm = nn.BatchNorm2d(out_dim)
         self.relu = nn.ReLU(True)
     
@@ -65,16 +65,16 @@ class MADVAE(nn.Module):
         self.c1 = ConvBlock(self.image_channels, 64, 5, 1, 2)
         self.c2 = ConvBlock(64, 64, 4, 2, 3)
         self.c3 = ConvBlock(64, 128, 4, 2, 1)
-        self.c4 = ConvBlock(128, 128, 4, 2, 1)
+        self.c4 = ConvBlock(128, 256, 4, 2, 1)
         self.e_module = nn.Sequential(self.c1, self.c2, self.c3, self.c4)
         self.mu =nn.Linear(self.h_dim, self.z_dim)
         self.sigma = nn.Linear(self.h_dim, self.z_dim)
         # module for image decoder
         self.linear = nn.Linear(self.z_dim, self.h_dim)
-        self.d1 = DeConvBlock(128, 128, 4, 2, 1)
+        self.d1 = DeConvBlock(256, 128, 4, 2, 1)
         self.d2 = DeConvBlock(128, 64, 4, 2, 1)
         self.d3 = DeConvBlock(64, 64, 4, 2, 3)
-        self.d4 = DeConvBlock(64, self.image_channels, 5, 1, 2)
+        self.d4 = nn.ConvTranspose2d(64, self.image_channels, 5, 1, 2, bias=False)
         self.img_module = nn.Sequential(self.d1, self.d2, self.d3, self.d4)
 
     # Encoder
@@ -91,8 +91,8 @@ class MADVAE(nn.Module):
     # Decoder for image denoising
     def img_decode(self, z):
         self.batch_size = z.size(0)
-        x = self.linear(z)
-        x = x.view(self.batch_size, 128, 4, 4)
+        x = F.relu(self.linear(z))
+        x = x.view(self.batch_size, 256, 4, 4)
 
         return F.sigmoid(self.img_module(x))
     
