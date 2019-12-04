@@ -19,7 +19,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
     parser.add_argument('--epochs', type=int, default=5, help='Training epoch numbers')
-    parser.add_argument('--h_dim', type=int, default=2048, help='Hidden dimensions')
+    parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
     parser.add_argument('--image_size', type=int, default=28, help='Image size (default to be squared images)')
@@ -48,7 +48,7 @@ def main():
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
 
     # summary writer for tensorboard
-    writer1 = SummaryWriter(args.log_dir+'/reon_loss')
+    writer1 = SummaryWriter(args.log_dir+'/recon_loss')
     writer2 = SummaryWriter(args.log_dir+'/img_loss')
     writer3 = SummaryWriter(args.log_dir+'/kl_loss')
 
@@ -60,13 +60,13 @@ def main():
     for epoch in range(1, args.epochs+1):
         print('Epoch: {}'.format(epoch))
         recon_losses, img_losses, kl_losses, datas, adv_datas, outputs, step = \
-            train(args, dataloader, model, optimizer, step)
+            train(args, dataloader, model, optimizer, step, epoch)
         
         # write to tensorboard
         writer1.add_scalar('recon_loss', np.sum(recon_losses)/len(recon_losses), step)
         writer2.add_scalar('img_loss', np.sum(img_losses)/len(img_losses), step)
         writer3.add_scalar('kl_loss', np.sum(kl_losses)/len(kl_losses), step)
-        for i in range(args.batch_size):
+        for i in range(len(datas)):
             writer1.add_image('original data', datas[i][0], step)
             writer1.add_image('adv data', adv_datas[i][0], step)
             writer1.add_image("reconstruct data", outputs[i][0], step)
@@ -111,7 +111,7 @@ def train(args, dataloader, model, optimizer, step):
         distribution = Normal(dsm, dss)
 
         # calculate losses
-        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
+        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, epoch/100)
         loss = r_loss
         loss.backward()
 
@@ -141,6 +141,7 @@ def init_models(args):
             model = torch.nn.DataParallel(model, device_ids=range(args.gpu_num))
             model = model.module
         # move to cuda
+        model.apply(weights_init)
         model = model.cuda()
         print('Using: ', torch.cuda.get_device_name(torch.cuda.current_device()))
     
@@ -153,6 +154,14 @@ def init_models(args):
 
     return model, optimizer, scheduler
 
+# initialize model weights
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1 and classname.find('Block') == -1:
+        m.weight.data.normal_(0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        m.weight.data.normal_(1, 0.02)
+        m.bias.data.fill_(0)
 
 if __name__ == '__main__':
     main()

@@ -18,17 +18,17 @@ def parse_args():
     desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=5, help='Training epoch numbers')
-    parser.add_argument('--h_dim', type=int, default=2048, help='Hidden dimensions')
+    parser.add_argument('--epochs', type=int, default=10, help='Training epoch numbers')
+    parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
     parser.add_argument('--image_size', type=int, default=28, help='Image size (default to be squared images)')
     parser.add_argument('--num_classes', type=int, default=10, help='Number of image classes')
     parser.add_argument('--log_dir', type=str, default='logs', help='Logs directory')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate for the Adam optimizer')
-    parser.add_argument('--closs_weight', type=float, default=10, help='Weight for classification loss functions')
-    parser.add_argument('--ploss_weight', type=float, default=0.5, help='Weight for proximity loss functions')
-    parser.add_argument('--dloss_weight', type=float, default=0.0001, help='Weight for distance loss functions')
+    parser.add_argument('--closs_weight', type=float, default=0.05, help='Weight for classification loss functions')
+    parser.add_argument('--ploss_weight', type=float, default=0.01, help='Weight for proximity loss functions')
+    parser.add_argument('--dloss_weight', type=float, default=0.00001, help='Weight for distance loss functions')
     parser.add_argument('--data_root', type=str, default='data', help='Data directory')
     parser.add_argument('--model_dir', type=str, default='pretrained_model', help='Pretrained model directory')
     parser.add_argument('--use_gpu', type=bool, default=True, help='If use GPU for training')
@@ -51,7 +51,7 @@ def main():
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
 
     # summary writer for tensorboard
-    writer1 = SummaryWriter(args.log_dir+'/reon_loss')
+    writer1 = SummaryWriter(args.log_dir+'/recon_loss')
     writer2 = SummaryWriter(args.log_dir+'/img_loss')
     writer3 = SummaryWriter(args.log_dir+'/kl_loss')
     writer4 = SummaryWriter(args.log_dir+'/c_loss')
@@ -66,7 +66,7 @@ def main():
     for epoch in range(1, args.epochs+1):
         print('Epoch: {}'.format(epoch))
         recon_losses, img_losses, kl_losses, c_losses, pd_losses, datas, adv_datas, outputs, step = \
-            train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step)
+            train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step, epoch)
         
         # write to tensorboard
         writer1.add_scalar('recon_loss', np.sum(recon_losses)/len(recon_losses), step)
@@ -74,7 +74,7 @@ def main():
         writer3.add_scalar('kl_loss', np.sum(kl_losses)/len(kl_losses), step)
         writer4.add_scalar('c_loss', np.sum(c_losses)/len(c_losses), step)
         writer5.add_scalar('pd_loss', np.sum(pd_losses)/len(pd_losses), step)
-        for i in range(args.batch_size):
+        for i in range(len(datas)):
             writer1.add_image('original data', datas[i][0], step)
             writer1.add_image('adv data', adv_datas[i][0], step)
             writer1.add_image("reconstruct data", outputs[i][0], step)
@@ -93,7 +93,7 @@ def main():
     torch.save(model.state_dict(), '{}/combined/params.pt'.format(args.model_dir))
 
 # training function
-def train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step):
+def train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step, epoch):
     # init output lists
     recon_losses = list()
     img_losses = list()
@@ -123,7 +123,7 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         distribution = Normal(dsm, dss)
 
         # calculate losses
-        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
+        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, epoch/100)
         c_loss = classification_loss(output, label, classifier)
         p_loss = proximity(z, label)
         d_loss = distance(z, label)
@@ -171,6 +171,7 @@ def init_models(args):
             proximity = proximity.module
             distance = distance.module
         # move to cuda
+        model.apply(weights_init)
         model = model.cuda()
         classifier = classifier.cuda()
         proximity = proximity.cuda()
@@ -196,6 +197,14 @@ def init_models(args):
     return model, proximity, distance, classifier, optimizer, scheduler,\
          optimizer1, scheduler1, optimizer2, scheduler2
 
+# initialize model weights
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1 and classname.find('Block') == -1:
+        m.weight.data.normal_(0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        m.weight.data.normal_(1, 0.02)
+        m.bias.data.fill_(0)
 
 if __name__ == '__main__':
     main()
