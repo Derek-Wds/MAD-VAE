@@ -105,9 +105,9 @@ if __name__ == "__main__":
     Plot the dataset
     ================
     '''
-    m_loader = torch.utils.data.DataLoader(datasets.MNIST(root='../data', train=False,\
+    m_loader = torch.utils.data.DataLoader(datasets.MNIST(root='../../data', train=False,\
         download=False, transform=transforms.ToTensor()), batch_size=25)
-    f_loader = torch.utils.data.DataLoader(datasets.FashionMNIST(root='../data', train=False,\
+    f_loader = torch.utils.data.DataLoader(datasets.FashionMNIST(root='../../data', train=False,\
         download=False, transform=transforms.ToTensor()), batch_size=25)
 
 
@@ -123,9 +123,9 @@ if __name__ == "__main__":
     Plot the reuslt of model
     ========================
     '''
-    data = np.load('../data/xs_mnist.npy')
-    adv_data = np.load('../data/advs_mnist.npy')
-    labels = np.load('../data/ys_mnist.npy')
+    data = np.load('../../data/xs_mnist.npy')
+    adv_data = np.load('../../data/advs_mnist.npy')
+    labels = np.load('../../data/ys_mnist.npy')
     dataset = Dataset(data, adv_data, labels)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=25, shuffle=True, num_workers=1)
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     # prepare data
     transform  = transforms.Compose([transforms.CenterCrop(args.image_size), transforms.ToTensor()])
-    dataset = datasets.MNIST('../data', train=True, download=True, transform=transform)
+    dataset = datasets.MNIST('../../data', train=True, download=True, transform=transform)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=3, shuffle=True, num_workers=1)
     image, label = next(iter(dataloader))
 
@@ -201,19 +201,19 @@ if __name__ == "__main__":
         zs[i] = list(itertools.chain(*zs[i]))
 
     # plot original data
-    plot_tsne(images, labels, 'Original data t-SNE', '../plots/orginal_test_data_tsne.png')
+    plot_tsne(images, labels, 'Original data t-SNE', '../../plots/orginal_test_data_tsne.png')
 
     # plot attacked data
-    plot_tsne(adv_images[0], labels, 'Original data t-SNE', '../plots/attack_fgsm_test_data_tsne.png')
-    plot_tsne(adv_images[1], labels, 'Original data t-SNE', '../plots/attack_rfgsm_test_data_tsne.png')
-    plot_tsne(adv_images[2], labels, 'Original data t-SNE', '../plots/attack_cw_test_data_tsne.png')
+    plot_tsne(adv_images[0], labels, 'Original data t-SNE', '../../plots/attack_fgsm_test_data_tsne.png')
+    plot_tsne(adv_images[1], labels, 'Original data t-SNE', '../../plots/attack_rfgsm_test_data_tsne.png')
+    plot_tsne(adv_images[2], labels, 'Original data t-SNE', '../../plots/attack_cw_test_data_tsne.png')
 
     # plot output data
-    plot_tsne(outputs[0], labels, 'Original data t-SNE', '../plots/output_fgsm_test_data_tsne.png')
-    plot_tsne(outputs[1], labels, 'Original data t-SNE', '../plots/output_rfgsm_test_data_tsne.png')
-    plot_tsne(outputs[2], labels, 'Original data t-SNE', '../plots/output_cw_test_data_tsne.png')
+    plot_tsne(outputs[0], labels, 'Original data t-SNE', '../../plots/output_fgsm_test_data_tsne.png')
+    plot_tsne(outputs[1], labels, 'Original data t-SNE', '../../plots/output_rfgsm_test_data_tsne.png')
+    plot_tsne(outputs[2], labels, 'Original data t-SNE', '../../plots/output_cw_test_data_tsne.png')
 
     # plot z
-    plot_tsne(zs[0], labels, 'Original data t-SNE', '../plots/z_fgsm_test_data_tsne.png')
-    plot_tsne(zs[1], labels, 'Original data t-SNE', '../plots/z_rfgsm_test_data_tsne.png')
-    plot_tsne(zs[2], labels, 'Original data t-SNE', '../plots/z_cw_test_data_tsne.png')
+    plot_tsne(zs[0], labels, 'Original data t-SNE', '../../plots/z_fgsm_test_data_tsne.png')
+    plot_tsne(zs[1], labels, 'Original data t-SNE', '../../plots/z_rfgsm_test_data_tsne.png')
+    plot_tsne(zs[2], labels, 'Original data t-SNE', '../../plots/z_cw_test_data_tsne.png')
