@@ -44,9 +44,9 @@ def main():
         os.mkdir(args.model_dir)
 
     # prepare dataset
-    data = np.load('xs_mnist.npy') # image data in npy file
-    labels = np.load('ys_mnist.npy') # labels data in npy file
-    adv_data = np.load('advs_mnist.npy') # adversarial image data in npy file
+    data = np.load('data/xs_mnist.npy') # image data in npy file
+    labels = np.load('data/ys_mnist.npy') # labels data in npy file
+    adv_data = np.load('data/advs_mnist.npy') # adversarial image data in npy file
     dataset = Dataset(data, labels, adv_data)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
 
@@ -84,6 +84,8 @@ def main():
 
         # step scheduler
         scheduler.step()
+        scheduler1.step()
+        scheduler2.step()
 
         # save model parameters
         if epoch % 5 == 0:
@@ -134,7 +136,11 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
 
         # step optimizer
         optimizer.step()
+        for param in proximity.parameters():
+            param.grad.data *= (1. / args.ploss_weight)
         optimizer1.step()
+        for param in distance.parameters():
+            param.grad.data *= (1. / args.dloss_weight)
         optimizer2.step()
 
         # record results
@@ -185,9 +191,9 @@ def init_models(args):
     # construct optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = MinExponentialLR(optimizer, gamma=0.998, minimum=1e-5)
-    optimizer1 = optim.Adam(proximity.parameters(), lr=args.lr)
+    optimizer1 = optim.Adam(proximity.parameters(), lr=args.lr*50)
     scheduler1 = MinExponentialLR(optimizer1, gamma=0.998, minimum=1e-5)
-    optimizer2 = optim.Adam(distance.parameters(), lr=args.lr)
+    optimizer2 = optim.Adam(distance.parameters(), lr=args.lr/100)
     scheduler2 = MinExponentialLR(optimizer2, gamma=0.998, minimum=1e-5)
 
     return model, proximity, distance, classifier, optimizer, scheduler,\

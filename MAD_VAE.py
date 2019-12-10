@@ -99,7 +99,10 @@ class MADVAE(nn.Module):
     # Forward function
     def forward(self, x):
         dist = self.encode(x)
-        z = dist.rsample()
+        if self.training == True:
+            z = dist.rsample()
+        else:
+            z = dist.mean
         output = self.img_decode(z)
         
         return output, dist.mean, dist.stddev, z

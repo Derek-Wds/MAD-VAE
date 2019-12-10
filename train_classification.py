@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument('--num_classes', type=int, default=10, help='Number of image classes')
     parser.add_argument('--log_dir', type=str, default='c_logs', help='Logs directory')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate for the Adam optimizer')
-    parser.add_argument('--closs_weight', type=float, default=0.05, help='Weight for classification loss functions')
+    parser.add_argument('--closs_weight', type=float, default=0.1, help='Weight for classification loss functions')
     parser.add_argument('--data_root', type=str, default='data', help='Data directory')
     parser.add_argument('--model_dir', type=str, default='pretrained_model', help='Pretrained model directory')
     parser.add_argument('--use_gpu', type=bool, default=True, help='If use GPU for training')
@@ -42,9 +42,9 @@ def main():
         os.mkdir(args.model_dir)
 
     # prepare dataset
-    data = np.load('xs_mnist.npy') # image data in npy file
-    labels = np.load('ys_mnist.npy') # labels data in npy file
-    adv_data = np.load('advs_mnist.npy') # adversarial image data in npy file
+    data = np.load('data/xs_mnist.npy') # image data in npy file
+    labels = np.load('data/ys_mnist.npy') # labels data in npy file
+    adv_data = np.load('data/advs_mnist.npy') # adversarial image data in npy file
     dataset = Dataset(data, labels, adv_data)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
 

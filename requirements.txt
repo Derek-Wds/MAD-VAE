@@ -1,6 +1,11 @@
-numpy==1.15.0
-foolbox==2.0.0b0
-advertorch==0.1.5
+pandas==0.24.2
+seaborn==0.8.1
 torchvision==0.4.0
-matplotlib==3.0.3
+numpy==1.13.3
+advertorch==0.1.5
 torch==1.2.0
+matplotlib==3.0.3
+foolbox==2.0.0b0
+main==0.1
+scikit_learn==0.22
+umap-learn==0.3.10

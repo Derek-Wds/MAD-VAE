@@ -41,9 +41,9 @@ def main():
         os.mkdir(args.model_dir)
 
     # prepare dataset
-    data = np.load('xs_mnist.npy') # image data in npy file
-    labels = np.load('ys_mnist.npy') # labels data in npy file
-    adv_data = np.load('advs_mnist.npy') # adversarial image data in npy file
+    data = np.load('data/xs_mnist.npy') # image data in npy file
+    labels = np.load('data/ys_mnist.npy') # labels data in npy file
+    adv_data = np.load('data/advs_mnist.npy') # adversarial image data in npy file
     dataset = Dataset(data, labels, adv_data)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=6)
 
