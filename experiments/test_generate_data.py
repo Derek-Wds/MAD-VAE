@@ -1,6 +1,7 @@
 import sys, os, argparse
 sys.path.insert(0, os.path.abspath('..'))
-from utils.generate_data import *
+from utils.adversarial import *
+from utils.classifier import *
 
 # argument parser
 def parse_args():

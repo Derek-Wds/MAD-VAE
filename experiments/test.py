@@ -11,6 +11,8 @@ from classifier import *
 from adversarial import *
 from test.plotting import *
 from utils.dataset import *
+from utils.adversarial import *
+from utils.classifier import *
 
 # argument parser
 def parse_args():
@@ -66,11 +68,13 @@ if __name__ == "__main__":
                 image = image.cuda()
                 label = label.cuda()
 
+                # get model output
                 output, adv_out = add_adv(classifier, image, label, adv)
                 output_class = classifier(output)
                 def_out, _, _, _ = model(adv_out)
                 adv_out_class = classifier(def_out)
 
+                # get model predicted class
                 true_class = torch.argmax(output_class, 1)
                 adversarial_class = torch.argmax(adv_out_class, 1)
 
@@ -78,6 +82,7 @@ if __name__ == "__main__":
                 print(f'actual class {true_class}')
                 print(f'adversarial class {adversarial_class}')
 
+                # calculate number of correct classification
                 true += torch.sum(torch.eq(true_class, adversarial_class))
 
                 print(int(true) / total)

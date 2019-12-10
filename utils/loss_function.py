@@ -29,7 +29,9 @@ def classification_loss(recon, label, classifier):
     loss = criterion(output, label)
 
     return loss
-
+'''
+Reference to the paper Adversarial Defense by Restricting the Hidden Space of Deep Neural Networks at https://github.com/aamir-mustafa/pcl-adversarial-defense
+'''
 # proximity loss for the z
 class Proximity(nn.Module):
     def __init__(self, args):

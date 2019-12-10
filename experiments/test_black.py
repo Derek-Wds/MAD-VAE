@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.abspath('..'))
 from MAD_VAE import *
 from test.test_models import *
-from classifier import *
-from adversarial import *
 from test.plotting import *
 from utils.dataset import *
+from utils.adversarial import *
+from utils.classifier import *
 
 def parse_args():
     desc = "MAD-VAE for adversarial defense"

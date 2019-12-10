@@ -8,7 +8,8 @@ from torch.utils import data
 from torchvision import datasets, transforms
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
-from utils.preprocess import *
+from utils.classifier import *
+from utils.adversarial import *
 import itertools
 
 def parse_args():

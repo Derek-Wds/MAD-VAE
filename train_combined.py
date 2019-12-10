@@ -9,7 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets, transforms
 from MAD_VAE import *
 from utils.loss_function import *
-from utils.preprocess import *
+from utils.classifier import *
 from utils.scheduler import *
 from utils.dataset import *
 

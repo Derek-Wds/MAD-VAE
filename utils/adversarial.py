@@ -2,16 +2,19 @@ import torch
 from test.attacks import *
 from advertorch.attacks import *
 
+# attack parameters
+fgsm = [0.25, 0.3, 0.35]
+rfgsm = [0.25, 0.3, 0.35]
+cw = [5, 10, 15]
+
 # function for construct adversarial images
-def add_adv(model, image, label, adv):
+def add_adv(model, image, label, adv, i):
     # fast gradient sign method
     if adv == 'fgsm':
-        # _, adv_image = fgsm_attack(model, image, label)
-        fgsm = GradientSignAttack(model)
-        adv_image = fgsm(image, label)
+        fgsm_attack = GradientSignAttack(model, eps=fgsm[i])
+        adv_image = fgsm_attack(image, label)
     # iterative fast gradient sign method
     elif adv == 'i-fgsm':
-        # _, adv_image = ifgsm_attck(model, image, label)
         ifgsm = LinfBasicIterativeAttack(model)
         adv_image = ifgsm(image, label)
     # iterative least likely sign method
@@ -19,18 +22,16 @@ def add_adv(model, image, label, adv):
         _, adv_image = iterll_attack(model, image, label)
     # random fast gradient sign method
     elif adv == 'r-fgsm':
-        #_, adv_image = rfgsm_attck(model, image, label)
         alpha = 0.05
         data = torch.clamp(image + alpha * torch.empty(image.shape).normal_(mean=0,std=1).cuda(), min=0, max=1)
-        fgsm = GradientSignAttack(model, eps=0.3-alpha)
-        adv_image = fgsm(data, label)
+        rfgsm_attack = GradientSignAttack(model, eps=rfgsm[i]-alpha)
+        adv_image = rfgsm_attack(data, label)
     # momentum iterative fast gradient sign method
     elif adv == 'mi-fgsm':
         mifgsm = MomentumIterativeAttack(model)
         adv_image = mifgsm(image, label)
     # projected gradient sign method
     elif adv == 'pgd':
-        #_, adv_image = pgd_attack(model, image, label)
         pgd = PGDAttack(model)
         adv_image = pgd(image, label)
     # deepfool attack method
@@ -38,9 +39,8 @@ def add_adv(model, image, label, adv):
         _, adv_image = deepfool_attack(model, image, label)
     # Carlini-Wagner attack
     elif adv == 'cw':
-        # _, adv_image = cw_attack(model, image, label)
-        cw = CarliniWagnerL2Attack(model, 10, confidence=10, max_iterations=1500)
-        adv_image = cw(image, label)
+        cw_attack = CarliniWagnerL2Attack(model, 10, confidence=cw[i], max_iterations=1500)
+        adv_image = cw_attack(image, label)
     # simba attack
     elif adv == 'simba':
         _, adv_image = simba_attack(model, image, label)

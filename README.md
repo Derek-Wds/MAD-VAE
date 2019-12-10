@@ -69,6 +69,9 @@
   ```
   Then the tensoboard will be available at `localhost:9090`
 
+### Plotting
+* We provide the plotting scripts for adversarial images and model output, as well as t-SNE and UMAP dimension reduction algorithms. All these can be find in two files: `experiments/test/plotting.py` and `experiments/UMAP Test.ipynb`.
+
 ## Example Output
 * **FGSM** adversarial examples\
 ![FGSM attack](/plots/fgsm_img.png)

@@ -15,6 +15,8 @@ from torchvision.datasets.mnist import MNIST, FashionMNIST
 from classifier import *
 from adversarial import *
 from utils.dataset import *
+from utils.adversarial import *
+from utils.classifier import *
 from MAD_VAE import *
 
 # argument parser
@@ -62,8 +64,8 @@ def generate(values):
         output += "{0:.2f}".format((values[i,i]/sums[i]).item())
     output += " \n"
     output += "\\end{tabular} \n\
-\\caption{Confusion matrix of accuracy of Defense-VAE with proximity and distance loss on entire test datasets (combining all the attacks).} \n\
-\\label{table:defense-vae-result} \n\
+\\caption{} \n\
+\\label{table:confusion} \n\
 \\end{table}"
     
     print(output)
@@ -84,7 +86,7 @@ if __name__ == "__main__":
     classifier = classifier.cuda()
 
     # adversarial methods
-    adv_accuracy = {'fgsm': [0 for i in range(100)], 'r-fgsm': [0 for i in range(100)], 'cw': [0 for i in range(100)]}
+    adv_accuracy = {'fgsm': np.zeros(100), 'r-fgsm': np.zeros(100), 'cw': np.zeros(100)}
 
     total = len(dataset)
 
@@ -101,16 +103,17 @@ if __name__ == "__main__":
             adv_img = adv_img.cuda()
             label = label.cuda()
 
+            # get model output
             def_out, _, _, _ = model(adv_img)
             adv_out_class = classifier(def_out)
 
+            # get model predicted class
             adversarial_class = torch.argmax(adv_out_class, 1)
             
-            for i in range(len(adversarial_class)):
-                adv_accuracy[adv][adversarial_class[i]*10+label[i]] += 1
+            # update confusion matrix
+            adv_accuracy[adv][(adversarial_class*10+label).astype(int)] += 1
 
-    output = [0 for i in range(100)]
+    output = np.zeros(100)
     for adv in adv_accuracy:
-        for i in range(len(adv_accuracy[adv])):
-            output[i] += adv_accuracy[adv][i]
-    generate(output)
+        output += adv_accuracy[adv]
+    generate(output.tolist())

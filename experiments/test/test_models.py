@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# This file contains the model being used in Defense-GAN and Defense-VAE for experiments.
+
 '''
 Model A
 MNIST accuracy: 0.993900
