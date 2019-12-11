@@ -10,6 +10,7 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from utils.classifier import *
 from utils.adversarial import *
+from utils.dataset import *
 import itertools
 
 def parse_args():
@@ -83,23 +84,6 @@ def plot_tsne(data, label, title, path):
 
 if __name__ == "__main__":
 
-    # datset class for dataloader
-    class Dataset(data.Dataset):
-        def __init__(self, data, adv_data, labels):
-            self.data = torch.from_numpy(data)
-            self.adv_data = torch.from_numpy(adv_data)
-            self.labels = torch.from_numpy(labels)
-
-        def __len__(self):
-            return len(self.data)
-        
-        def __getitem__(self, index):
-            X = self.data[index]
-            y = self.adv_data[index]
-            l = self.labels[index]
-
-            return X, y, l
-
 
     '''
     ================
@@ -133,7 +117,7 @@ if __name__ == "__main__":
     args = parse_args()
     # load models
     model = MADVAE(args)
-    dic = torch.load('vanilla_params.pt')
+    dic = torch.load('../../pretrained/vanilla/params.pt')
     for name in list(dic.keys()):
         dic[name.replace('module.', '')] = dic.pop(name)
     model_dict = model.state_dict()
@@ -155,17 +139,6 @@ if __name__ == "__main__":
     Plot the t-SNE clustering for output data and latent z
     ======================================================
     '''
-    args = parse_args()
-    # load models
-    model = MADVAE(args)
-    dic = torch.load('vanilla_params.pt')
-    for name in list(dic.keys()):
-        dic[name.replace('module.', '')] = dic.pop(name)
-    model_dict = model.state_dict()
-    dic = {k: v for k, v in dic.items() if k in model_dict}
-    model_dict.update(dic)
-    model.load_state_dict(dic)
-    model.eval()
 
     # prepare data
     transform  = transforms.Compose([transforms.CenterCrop(args.image_size), transforms.ToTensor()])
