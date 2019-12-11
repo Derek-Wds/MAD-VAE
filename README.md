@@ -2,7 +2,7 @@
 
 Dingsu Wang, Frederick Morlock
 
-<font size="3">This repo contains the codes for the research of **MAD-VAE: Manifold Awareness adversarial Defense Variational Autoencoder**, which is a defense model based on Defense-VAE.</font>
+<font size="3">This repo contains the codes for the research of **MAD-VAE: Manifold Awareness adversarial Defense Variational Autoencoder**, which is a adversarial defense model based on Defense-VAE.</font>
 
 ## How to use this repo
 ### Repo structure
@@ -111,4 +111,4 @@ If you find our ideas are helpful to your research, we would appreciate if you w
 }
 ```
 ## Credit
-This work would not be done without the insights and code from the work [Adversarial Defense by Restricting the Hidden Space of Deep Neural Networks](https://github.com/aamir-mustafa/pcl-adversarial-defense).
+This work would not be done without the insights and code from the work [Adversarial Defense by Restricting the Hidden Space of Deep Neural Networks](https://github.com/aamir-mustafa/pcl-adversarial-defense) and [Unsupervised Deep Embedding for Clustering Analysis](https://arxiv.org/abs/1511.06335).
