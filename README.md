@@ -11,41 +11,86 @@ Dingsu Wang, Frederick Morlock
 * We provide the pretrained parameters for all of our models. In the `pretrained_model` folder contains pretrained params for classifiers and our models, while in the `experiments/pretrained` folder are the pretraiend params for the test classifiers mentioned in the Defense-VAE paper.
 * The plots for our experiments can be found in the `plots` folder.
 ```
-├── experiments
-│   ├── adversarial.py
-│   ├── classifier.py
-│   ├── __init__.py
-│   ├── test
-│   │   ├── attacks.py
-│   │   ├── __init__.py
-│   │   ├── plotting.py
-│   │   ├── pretrained
-│   │   ├── test_models.py
-│   │   └── train_test_models.py
-│   ├── test_black.py
-│   ├── test_confusion.py
-│   ├── test_generate_data.py
-│   ├── test.py
-│   └── UMAP Test.ipynb
 ├── LICENSE
 ├── MAD-VAE.pdf
 ├── MAD_VAE.py
+├── README.md
+├── data
+│   ├── cw_advs_mnist.npy
+│   ├── cw_xs_mnist.npy
+│   ├── cw_ys_mnist.npy
+│   ├── fgsm_advs_mnist.npy
+│   ├── fgsm_xs_mnist.npy
+│   ├── fgsm_ys_mnist.npy
+│   ├── mi-fgsm_advs_mnist.npy
+│   ├── mi-fgsm_xs_mnist.npy
+│   ├── mi-fgsm_ys_mnist.npy
+│   ├── pgd_advs_mnist.npy
+│   ├── pgd_xs_mnist.npy
+│   ├── pgd_ys_mnist.npy
+│   ├── r-fgsm_advs_mnist.npy
+│   ├── r-fgsm_xs_mnist.npy
+│   ├── r-fgsm_ys_mnist.npy
+│   ├── single_advs_mnist.npy
+│   ├── single_xs_mnist.npy
+│   └── single_ys_mnist.npy
+├── experiments
+│   ├── __init__.py
+│   ├── test
+│   │   ├── __init__.py
+│   │   ├── attacks.py
+│   │   ├── pretrained
+│   │   │   ├── Model_A_fmnist_params.pt
+│   │   │   ├── Model_A_mnist_params.pt
+│   │   │   ├── Model_B_fmnist_params.pt
+│   │   │   ├── Model_B_mnist_params.pt
+│   │   │   ├── Model_C_fmnist_params.pt
+│   │   │   ├── Model_C_mnist_params.pt
+│   │   │   ├── Model_D_fmnist_params.pt
+│   │   │   ├── Model_D_mnist_params.pt
+│   │   │   ├── Model_E_fmnist_params.pt
+│   │   │   └── Model_E_mnist_params.pt
+│   │   ├── test_models.py
+│   │   └── train_test_models.py
+│   ├── test.py
+│   ├── test_black.py
+│   ├── test_confusion.py
+│   └── test_generate_data.py
 ├── plots
+│   ├── README.md
+│   ├── cw_img.png
+│   ├── cw_proxi_dist_img.png
+│   ├── fgsm_img.png
+│   └── fgsm_proxi_dist_img.png
+├── plotting
+│   ├── UMAP\ Test.ipynb
+│   ├── adv_plot.py
+│   ├── defense_plot.py
+│   ├── latent_plot.py
+│   ├── mnist_plot.py
+│   └── plotting.py
 ├── pretrained_model
 │   ├── classification
+│   │   └── params.pt
+│   ├── classifier_fmnist.pt
+│   ├── classifier_mnist.pt
 │   ├── combined
+│   │   └── params.pt
 │   ├── proxi_dist
+│   │   └── params.pt
 │   └── vanilla
-├── README.md
+│       └── params.pt
 ├── requirements.txt
+├── train.py
 ├── train_classification.py
 ├── train_cluster.py
 ├── train_combined.py
-├── train.py
 └── utils
+    ├── __init__.py
+    ├── adversarial.py
+    ├── classifier.py
     ├── dataset.py
     ├── generate_data.py
-    ├── __init__.py
     ├── loss_function.py
     └── scheduler.py
 
@@ -53,9 +98,9 @@ Dingsu Wang, Frederick Morlock
 
 ### Run our codes
 * Our codes are based on **Python3**, make sure it is successfully installed on your machines. Since we are using **GPUs** for training, please make sure you have GPU driver (cuda, cudnn) installed and function well.
-* Clone our repor from Github by running:
+* Clone our repo from Github by running:
   ```bash
-  git clone https://github.com/Derek-Wds/MAD-VAE.git
+  git clone git@github.com:Derek-Wds/MAD-VAE.git
   cd MAD-VAE
   ```
 * Install all the dependencies by running:
@@ -88,7 +133,7 @@ Dingsu Wang, Frederick Morlock
   Then the tensorboard will be available at `localhost:9090`
 
 ### Plotting
-* We provide the plotting scripts for adversarial images and model output, as well as t-SNE and UMAP dimension reduction algorithms. All these can be find in two files: `experiments/test/plotting.py` and `experiments/UMAP Test.ipynb`.
+* We provide the plotting scripts for adversarial images and model output, as well as t-SNE and UMAP dimension reduction algorithms. All these can be found in the `plotting` directory.
 
 ## Example Output
 * **FGSM** adversarial examples\
