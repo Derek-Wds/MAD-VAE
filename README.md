@@ -68,6 +68,9 @@ Dingsu Wang, Frederick Morlock
   python generate_data.py
   ```
   Since generating training data while training usually takes few days (especially the CW attack), it is more efficient to generate data first before training.
+
+  If you find it takes a lot of time to generate data, we provide the training data we have at the link [here](https://drive.google.com/drive/folders/1SVGPW6_Vm9cqXT2MpzULv-xfG8PXwMHw?usp=sharing).
+
 * Train the vanilla model by running following under the main directory:
   ```bash
   python train.py --batch_size=512 --epochs=5 --log_dir="v_log" --gpu_num=2
