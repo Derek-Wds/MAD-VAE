@@ -74,14 +74,14 @@ if __name__ == "__main__":
     args = parse_args()
     # load models
     model = MADVAE(args)
-    dic = torch.load('old_pretrained/combined/params.pt')
+    dic = torch.load('../pretrained_model/combined/params.pt')
     model.load_state_dict(dic)
     model.eval()
     model = model.cuda()
 
     # init and load classifier
     classifier = Classifier(args)
-    classifier.load_state_dict(torch.load('pretrained_model/classifier_mnist.pt'))
+    classifier.load_state_dict(torch.load('../pretrained_model/classifier_mnist.pt'))
     classifier.eval()
     classifier = classifier.cuda()
 
@@ -92,9 +92,9 @@ if __name__ == "__main__":
 
     for adv in adv_accuracy:
         # init dataset for TESTING
-        data = np.load('../testdata/{}_xs_mnist.npy'.format(adv))
-        adv_data = np.load('../testdata/{}_advs_mnist.npy'.format(adv))
-        labels = np.load('../testdata/{}_ys_mnist.npy'.format(adv))
+        data = np.load('../data/{}_xs_mnist.npy'.format(adv))
+        adv_data = np.load('../data/{}_advs_mnist.npy'.format(adv))
+        labels = np.load('../data/{}_ys_mnist.npy'.format(adv))
         dataset = Dataset(data, adv_data, labels)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=128, shuffle=True, num_workers=1)
         

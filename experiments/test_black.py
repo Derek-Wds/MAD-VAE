@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
         args = parse_args()
         model = MADVAE(args)
-        dic = torch.load('old_pretrained/{}/params.pt'.format(models[i]))
+        dic = torch.load('../pretrained_model/{}/params.pt'.format(models[i]))
         model.load_state_dict(dic)
         model.eval()
         model = model.cuda()

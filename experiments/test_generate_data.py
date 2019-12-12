@@ -28,7 +28,7 @@ if __name__ == "__main__":
     args = parse_args()
     # init and load model
     classifier = Classifier(args)
-    classifier.load_state_dict(torch.load('pretrained_model/classifier_mnist.pt'))
+    classifier.load_state_dict(torch.load('../pretrained_model/classifier_mnist.pt'))
     classifier.eval()
     classifier = classifier.cuda()
 
@@ -56,6 +56,6 @@ if __name__ == "__main__":
         xt = np.concatenate(xs, axis=0)
         yt = np.concatenate(ys, axis=0)
 
-        np.save('../testdata/' + adv + '_advs_mnist.npy', adv_x)
-        np.save('../testdata/' + adv + '_xs_mnist.npy', xt)
-        np.save('../testdata/' + adv + '_ys_mnist.npy', yt)
+        np.save('../data/' + adv + '_advs_mnist.npy', adv_x)
+        np.save('../data/' + adv + '_xs_mnist.npy', xt)
+        np.save('../data/' + adv + '_ys_mnist.npy', yt)
