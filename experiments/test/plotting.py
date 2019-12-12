@@ -118,11 +118,6 @@ if __name__ == "__main__":
     # load models
     model = MADVAE(args)
     dic = torch.load('../../pretrained/vanilla/params.pt')
-    for name in list(dic.keys()):
-        dic[name.replace('module.', '')] = dic.pop(name)
-    model_dict = model.state_dict()
-    dic = {k: v for k, v in dic.items() if k in model_dict}
-    model_dict.update(dic)
     model.load_state_dict(dic)
     model.eval()
     # get data
