@@ -15,41 +15,12 @@ Dingsu Wang, Frederick Morlock
 ├── MAD-VAE.pdf
 ├── MAD_VAE.py
 ├── README.md
-├── data
-│   ├── cw_advs_mnist.npy
-│   ├── cw_xs_mnist.npy
-│   ├── cw_ys_mnist.npy
-│   ├── fgsm_advs_mnist.npy
-│   ├── fgsm_xs_mnist.npy
-│   ├── fgsm_ys_mnist.npy
-│   ├── mi-fgsm_advs_mnist.npy
-│   ├── mi-fgsm_xs_mnist.npy
-│   ├── mi-fgsm_ys_mnist.npy
-│   ├── pgd_advs_mnist.npy
-│   ├── pgd_xs_mnist.npy
-│   ├── pgd_ys_mnist.npy
-│   ├── r-fgsm_advs_mnist.npy
-│   ├── r-fgsm_xs_mnist.npy
-│   ├── r-fgsm_ys_mnist.npy
-│   ├── single_advs_mnist.npy
-│   ├── single_xs_mnist.npy
-│   └── single_ys_mnist.npy
 ├── experiments
 │   ├── __init__.py
 │   ├── test
 │   │   ├── __init__.py
 │   │   ├── attacks.py
 │   │   ├── pretrained
-│   │   │   ├── Model_A_fmnist_params.pt
-│   │   │   ├── Model_A_mnist_params.pt
-│   │   │   ├── Model_B_fmnist_params.pt
-│   │   │   ├── Model_B_mnist_params.pt
-│   │   │   ├── Model_C_fmnist_params.pt
-│   │   │   ├── Model_C_mnist_params.pt
-│   │   │   ├── Model_D_fmnist_params.pt
-│   │   │   ├── Model_D_mnist_params.pt
-│   │   │   ├── Model_E_fmnist_params.pt
-│   │   │   └── Model_E_mnist_params.pt
 │   │   ├── test_models.py
 │   │   └── train_test_models.py
 │   ├── test.py
@@ -57,11 +28,6 @@ Dingsu Wang, Frederick Morlock
 │   ├── test_confusion.py
 │   └── test_generate_data.py
 ├── plots
-│   ├── README.md
-│   ├── cw_img.png
-│   ├── cw_proxi_dist_img.png
-│   ├── fgsm_img.png
-│   └── fgsm_proxi_dist_img.png
 ├── plotting
 │   ├── UMAP\ Test.ipynb
 │   ├── adv_plot.py
@@ -70,16 +36,6 @@ Dingsu Wang, Frederick Morlock
 │   ├── mnist_plot.py
 │   └── plotting.py
 ├── pretrained_model
-│   ├── classification
-│   │   └── params.pt
-│   ├── classifier_fmnist.pt
-│   ├── classifier_mnist.pt
-│   ├── combined
-│   │   └── params.pt
-│   ├── proxi_dist
-│   │   └── params.pt
-│   └── vanilla
-│       └── params.pt
 ├── requirements.txt
 ├── train.py
 ├── train_classification.py
@@ -107,6 +63,8 @@ Dingsu Wang, Frederick Morlock
   ```bash
   pip install -r requirements.txt
   ```
+
+### Training
 * Generate the training data by running:
   ```bash
   cd utils
@@ -131,6 +89,15 @@ Dingsu Wang, Frederick Morlock
   tensorboard --logdir v_log --port 9090
   ```
   Then the tensorboard will be available at `localhost:9090`
+
+
+### Testing
+* Testing code is available in the `experiments` directory.
+  * `test.py` runs whitebox attacks against a pretrained MAD-VAE – outputs results to files in the `experiments` directory
+  * `test_black.py` runs blackbox attacks against a pretrained MAD-VAE – outputs results to files in the `experiments` directory
+  * `test_confusion.py` prints the LaTeX code for a test-data confusion matrix
+  * `valid_generate_data.py` generates validation data in the data directory at the root of the project.
+
 
 ### Plotting
 * We provide the plotting scripts for adversarial images and model output, as well as t-SNE and UMAP dimension reduction algorithms. All these can be found in the `plotting` directory.
