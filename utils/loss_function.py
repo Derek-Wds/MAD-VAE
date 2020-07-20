@@ -51,7 +51,7 @@ class Proximity(nn.Module):
         batch_size = x.size(0)
         distmat = torch.pow(x, 2).sum(dim=1, keepdim=True).expand(batch_size, self.num_classes) + \
                   torch.pow(self.centers, 2).sum(dim=1, keepdim=True).expand(self.num_classes, batch_size).T
-        distmat.addmm_(1, -2, x, self.centers.T)
+        distmat.addmm_(x, self.centers.T, beta=1, alpha=-2)
 
         # get matrix masks
         labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
@@ -88,7 +88,7 @@ class Distance(nn.Module):
         batch_size = x.size(0)
         distmat = torch.pow(x, 2).sum(dim=1, keepdim=True).expand(batch_size, self.num_classes) + \
                   torch.pow(self.centers, 2).sum(dim=1, keepdim=True).expand(self.num_classes, batch_size).T
-        distmat.addmm_(1, -2, x, self.centers.T)
+        distmat.addmm_(x, self.centers.T, beta=1, alpha=-2)
 
         # get matrix masks
         labels = labels.unsqueeze(1).expand(batch_size, self.num_classes)
@@ -99,7 +99,7 @@ class Distance(nn.Module):
         for i in range(batch_size):
             k = mask[i].clone().to(dtype=torch.int8)
             k = -1 * k +1
-            kk = k.clone().to(dtype=torch.uint8)
+            kk = k.clone().to(dtype=torch.bool)
             value = distmat[i][kk]
             value = torch.sqrt(value)
             value = value.clamp(min=1e-8, max=1e+8) # for numerical stability
