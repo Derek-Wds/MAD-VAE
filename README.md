@@ -11,41 +11,42 @@ Dingsu Wang, Frederick Morlock
 * We provide the pretrained parameters for all of our models. In the `pretrained_model` folder contains pretrained params for classifiers and our models, while in the `experiments/pretrained` folder are the pretraiend params for the test classifiers mentioned in the Defense-VAE paper.
 * The plots for our experiments can be found in the `plots` folder.
 ```
-├── experiments
-│   ├── adversarial.py
-│   ├── classifier.py
-│   ├── __init__.py
-│   ├── test
-│   │   ├── attacks.py
-│   │   ├── __init__.py
-│   │   ├── plotting.py
-│   │   ├── pretrained
-│   │   ├── test_models.py
-│   │   └── train_test_models.py
-│   ├── test_black.py
-│   ├── test_confusion.py
-│   ├── test_generate_data.py
-│   ├── test.py
-│   └── UMAP Test.ipynb
 ├── LICENSE
 ├── MAD-VAE.pdf
 ├── MAD_VAE.py
-├── plots
-├── pretrained_model
-│   ├── classification
-│   ├── combined
-│   ├── proxi_dist
-│   └── vanilla
 ├── README.md
+├── experiments
+│   ├── __init__.py
+│   ├── test
+│   │   ├── __init__.py
+│   │   ├── attacks.py
+│   │   ├── pretrained
+│   │   ├── test_models.py
+│   │   └── train_test_models.py
+│   ├── test.py
+│   ├── test_black.py
+│   ├── test_confusion.py
+│   └── test_generate_data.py
+├── plots
+├── plotting
+│   ├── UMAP\ Test.ipynb
+│   ├── adv_plot.py
+│   ├── defense_plot.py
+│   ├── latent_plot.py
+│   ├── mnist_plot.py
+│   └── plotting.py
+├── pretrained_model
 ├── requirements.txt
+├── train.py
 ├── train_classification.py
 ├── train_cluster.py
 ├── train_combined.py
-├── train.py
 └── utils
+    ├── __init__.py
+    ├── adversarial.py
+    ├── classifier.py
     ├── dataset.py
     ├── generate_data.py
-    ├── __init__.py
     ├── loss_function.py
     └── scheduler.py
 
@@ -53,15 +54,17 @@ Dingsu Wang, Frederick Morlock
 
 ### Run our codes
 * Our codes are based on **Python3**, make sure it is successfully installed on your machines. Since we are using **GPUs** for training, please make sure you have GPU driver (cuda, cudnn) installed and function well.
-* Clone our repor from Github by running:
+* Clone our repo from Github by running:
   ```bash
-  git clone https://github.com/Derek-Wds/MAD-VAE.git
+  git clone git@github.com:Derek-Wds/MAD-VAE.git
   cd MAD-VAE
   ```
 * Install all the dependencies by running:
   ```bash
   pip install -r requirements.txt
   ```
+
+### Training
 * Generate the training data by running:
   ```bash
   cd utils
@@ -87,8 +90,17 @@ Dingsu Wang, Frederick Morlock
   ```
   Then the tensorboard will be available at `localhost:9090`
 
+
+### Testing
+* Testing code is available in the `experiments` directory.
+  * `test.py` runs whitebox attacks against a pretrained MAD-VAE – outputs results to files in the `experiments` directory
+  * `test_black.py` runs blackbox attacks against a pretrained MAD-VAE – outputs results to files in the `experiments` directory
+  * `test_confusion.py` prints the LaTeX code for a test-data confusion matrix
+  * `valid_generate_data.py` generates validation data in the data directory at the root of the project.
+
+
 ### Plotting
-* We provide the plotting scripts for adversarial images and model output, as well as t-SNE and UMAP dimension reduction algorithms. All these can be find in two files: `experiments/test/plotting.py` and `experiments/UMAP Test.ipynb`.
+* We provide the plotting scripts for adversarial images and model output, as well as t-SNE and UMAP dimension reduction algorithms. All these can be found in the `plotting` directory.
 
 ## Example Output
 * **FGSM** adversarial examples\

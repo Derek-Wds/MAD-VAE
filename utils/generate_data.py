@@ -66,10 +66,10 @@ if __name__ == "__main__":
             for adv in adv_list:
                 output, adv_out = add_adv(classifier, image, label, adv, i)
                 output = classifier(output)
-                adv_out = classifier(adv_out)
+                adv_class = classifier(adv_out)
                 print('attack method {}'.format(adv))
                 print('actual class ', torch.argmax(output, 1))
-                print('adversarial class ', torch.argmax(adv_out, 1))
+                print('adversarial class ', torch.argmax(adv_class, 1))
                 print('====================================')
                 xs.append(image.cpu().detach().numpy())
                 ys.append(label.cpu().detach().numpy())
