@@ -112,7 +112,7 @@ def train(args, dataloader, model, classifier, optimizer, step, epoch):
         optimizer.zero_grad()
 
         # get data and run model
-        output, dsm, dss, z = model(data)
+        output, dsm, dss, z = model(adv_data)
         distribution = Normal(dsm, dss)
 
         # calculate losses
