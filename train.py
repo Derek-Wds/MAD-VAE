@@ -85,7 +85,7 @@ def main():
     torch.save(model.state_dict(), '{}/vanilla/params.pt'.format(args.model_dir))
 
 # training function
-def train(args, dataloader, model, optimizer, step):
+def train(args, dataloader, model, optimizer, step, epoch):
     # init output lists
     recon_losses = list()
     img_losses = list()
