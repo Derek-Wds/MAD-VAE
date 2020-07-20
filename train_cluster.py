@@ -94,7 +94,7 @@ def main():
     torch.save(model.state_dict(), '{}/proxi_dist/params.pt'.format(args.model_dir))
 
 # training function
-def train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step):
+def train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step, epoch):
     # init output lists
     recon_losses = list()
     img_losses = list()
