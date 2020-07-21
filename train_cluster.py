@@ -64,7 +64,7 @@ def main():
     step = 0
     for epoch in range(1, args.epochs+1):
         print('Epoch: {}'.format(epoch))
-        recon_losses, img_losses, kl_losses, pd_losses, outputs, step = \
+        recon_losses, img_losses, kl_losses, pd_losses, datas, adv_datas, outputs, step = \
             train(args, dataloader, model, classifier, proximity, distance, optimizer, optimizer1, optimizer2, step, epoch)
         
         # write to tensorboard

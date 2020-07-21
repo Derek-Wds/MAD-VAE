@@ -7,9 +7,6 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 sys.path.insert(0, os.path.abspath('..'))
 from MAD_VAE import *
-from classifier import *
-from adversarial import *
-from test.plotting import *
 from utils.dataset import *
 from utils.adversarial import *
 from utils.classifier import *
@@ -19,7 +16,7 @@ def parse_args():
     desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=500, help='Training epoch numbers')
+    parser.add_argument('--epochs', type=int, default=5, help='Training epoch numbers')
     parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
@@ -30,15 +27,14 @@ def parse_args():
     parser.add_argument('--data_root', type=str, default='data', help='Data directory')
     parser.add_argument('--model_dir', type=str, default='pretrained_model', help='Pretrained model directory')
     parser.add_argument('--use_gpu', type=bool, default=True, help='If use GPU for training')
-    parser.add_argument('--gpu_num', type=int, default=1, choices=range(0,5), help='GPU numbers available for parallel training')
-    parser.add_argument('--experiment', type=int, default=1, choices=range(0,4))
+    parser.add_argument('--gpu_num', type=int, default=2, choices=range(0,5), help='GPU numbers available for parallel training')
     return parser.parse_args()
 
 
 
 if __name__ == "__main__":    
     models = ['vanilla', 'classification', 'proxi_dist', 'combined']
-    for i in range(4):
+    for i in range(len(models)):
         args = parse_args()
         model = MADVAE(args)
         dic = torch.load('../pretrained_model/{}/params.pt'.format(models[i]))
@@ -69,7 +65,7 @@ if __name__ == "__main__":
                 label = label.cuda()
 
                 # get model output
-                output, adv_out = add_adv(classifier, image, label, adv)
+                output, adv_out = add_adv(classifier, image, label, adv, default=True)
                 output_class = classifier(output)
                 def_out, _, _, _ = model(adv_out)
                 adv_out_class = classifier(def_out)

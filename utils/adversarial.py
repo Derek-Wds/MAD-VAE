@@ -8,10 +8,13 @@ rfgsm = [0.25, 0.3, 0.35]
 cw = [5, 10, 15]
 
 # function for construct adversarial images
-def add_adv(model, image, label, adv, i):
+def add_adv(model, image, label, adv, i=0, default=False):
     # fast gradient sign method
     if adv == 'fgsm':
-        fgsm_attack = GradientSignAttack(model, eps=fgsm[i])
+        if default:
+            fgsm_attack = GradientSignAttack(model)
+        else:
+            fgsm_attack = GradientSignAttack(model, eps=fgsm[i])
         adv_image = fgsm_attack(image, label)
     # iterative fast gradient sign method
     elif adv == 'i-fgsm':
@@ -24,7 +27,10 @@ def add_adv(model, image, label, adv, i):
     elif adv == 'r-fgsm':
         alpha = 0.05
         data = torch.clamp(image + alpha * torch.empty(image.shape).normal_(mean=0,std=1).cuda(), min=0, max=1)
-        rfgsm_attack = GradientSignAttack(model, eps=rfgsm[i]-alpha)
+        if default:
+            rfgsm_attack = GradientSignAttack(model, eps=0.3-alpha)
+        else:
+            rfgsm_attack = GradientSignAttack(model, eps=rfgsm[i]-alpha)
         adv_image = rfgsm_attack(data, label)
     # momentum iterative fast gradient sign method
     elif adv == 'mi-fgsm':
@@ -39,7 +45,10 @@ def add_adv(model, image, label, adv, i):
         _, adv_image = deepfool_attack(model, image, label)
     # Carlini-Wagner attack
     elif adv == 'cw':
-        cw_attack = CarliniWagnerL2Attack(model, 10, confidence=cw[i], max_iterations=1500)
+        if default:
+            cw_attack = CarliniWagnerL2Attack(model, 10, confidence=10, max_iterations=1500)
+        else:
+            cw_attack = CarliniWagnerL2Attack(model, 10, confidence=cw[i], max_iterations=1500)
         adv_image = cw_attack(image, label)
     # simba attack
     elif adv == 'simba':
