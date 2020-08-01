@@ -116,7 +116,7 @@ def train(args, dataloader, model, classifier, optimizer, step, epoch):
         distribution = Normal(dsm, dss)
 
         # calculate losses
-        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, epoch/100)
+        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
         c_loss = classification_loss(output, label, classifier)
         loss = r_loss + args.closs_weight * c_loss
         loss.backward()

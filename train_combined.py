@@ -126,11 +126,12 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         distribution = Normal(dsm, dss)
 
         # calculate losses
-        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, epoch/100)
+        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
         c_loss = classification_loss(output, label, classifier)
         p_loss = proximity(z, label)
         d_loss = distance(z, label)
-        loss = r_loss + args.closs_weight * c_loss + args.ploss_weight * p_loss - args.dloss_weight * d_loss
+        pd_loss = args.ploss_weight * p_loss - args.dloss_weight * d_loss
+        loss = r_loss + args.closs_weight * c_loss + pd_loss
         loss.backward()
 
         # clip for gradient
@@ -140,11 +141,7 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
 
         # step optimizer
         optimizer.step()
-        for param in proximity.parameters():
-            param.grad.data *= (1. / args.ploss_weight)
         optimizer1.step()
-        for param in distance.parameters():
-            param.grad.data *= (1. / args.dloss_weight)
         optimizer2.step()
 
         # record results
@@ -152,7 +149,7 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         img_losses.append(img_recon.cpu().item())
         kl_losses.append(kld.cpu().item())
         c_losses.append(c_loss.cpu().item())
-        pd_losses.append(p_loss.cpu().item() - d_loss.cpu().item())
+        pd_losses.append(pd_loss)
         outputs.append(output.cpu())
         datas.append(data.cpu())
         adv_datas.append(adv_data.cpu())
@@ -196,10 +193,10 @@ def init_models(args):
     # construct optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = MinExponentialLR(optimizer, gamma=0.998, minimum=1e-5)
-    optimizer1 = optim.Adam(proximity.parameters(), lr=args.lr*50)
-    scheduler1 = MinExponentialLR(optimizer1, gamma=0.998, minimum=1e-5)
-    optimizer2 = optim.Adam(distance.parameters(), lr=args.lr/100)
-    scheduler2 = MinExponentialLR(optimizer2, gamma=0.998, minimum=1e-5)
+    optimizer1 = optim.SGD(proximity.parameters(), lr=args.lr*500)
+    scheduler1 = MinExponentialLR(optimizer1, gamma=0.1, minimum=1e-5)
+    optimizer2 = optim.SGD(distance.parameters(), lr=args.lr/10)
+    scheduler2 = MinExponentialLR(optimizer2, gamma=0.1, minimum=1e-5)
 
     return model, proximity, distance, classifier, optimizer, scheduler,\
          optimizer1, scheduler1, optimizer2, scheduler2

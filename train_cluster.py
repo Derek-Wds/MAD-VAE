@@ -18,7 +18,7 @@ def parse_args():
     desc = "MAD-VAE for adversarial defense"
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('--batch_size', type=int, default=512, help='Training batch size')
-    parser.add_argument('--epochs', type=int, default=10, help='Training epoch numbers')
+    parser.add_argument('--epochs', type=int, default=5, help='Training epoch numbers')
     parser.add_argument('--h_dim', type=int, default=4096, help='Hidden dimensions')
     parser.add_argument('--z_dim', type=int, default=128, help='Latent dimensions for images')
     parser.add_argument('--image_channels', type=int, default=1, help='Image channels')
@@ -26,9 +26,8 @@ def parse_args():
     parser.add_argument('--num_classes', type=int, default=10, help='Number of image classes')
     parser.add_argument('--log_dir', type=str, default='pd_logs', help='Logs directory')
     parser.add_argument('--lr', type=float, default=0.001, help='Learning rate for the Adam optimizer')
-    parser.add_argument('--closs_weight', type=float, default=0.1, help='Weight for classification loss functions')
     parser.add_argument('--ploss_weight', type=float, default=0.01, help='Weight for proximity loss functions')
-    parser.add_argument('--dloss_weight', type=float, default=0.00001, help='Weight for distance loss functions')
+    parser.add_argument('--dloss_weight', type=float, default=0.0001, help='Weight for distance loss functions')
     parser.add_argument('--data_root', type=str, default='data', help='Data directory')
     parser.add_argument('--model_dir', type=str, default='pretrained_model', help='Pretrained model directory')
     parser.add_argument('--use_gpu', type=bool, default=True, help='If use GPU for training')
@@ -78,9 +77,9 @@ def main():
             writer1.add_image("reconstruct data", outputs[i][0], step)
 
         # print out loss
-        print("batch {}'s img_recon loss: {:.5f}, recon loss: {:.5f}, kl loss: {:.5f}"\
+        print("batch {}'s img_recon loss: {:.5f}, recon loss: {:.5f}, kl loss: {:.5f}, pd_loss: {:.5f}"\
             .format(step, np.sum(img_losses)/len(img_losses), np.sum(recon_losses)/len(recon_losses),\
-                    np.sum(kl_losses)/len(kl_losses)))
+                    np.sum(kl_losses)/len(kl_losses), np.sum(pd_losses)/len(pd_losses)))
 
         # step scheduler
         scheduler.step()
@@ -88,8 +87,8 @@ def main():
         scheduler2.step()
 
         # save model parameters
-        if epoch % 5 == 0:
-            torch.save(model.state_dict(), '{}/proxi_dist/params_{}.pt'.format(args.model_dir, epoch))
+        # if epoch % 5 == 0:
+            # torch.save(model.state_dict(), '{}/proxi_dist/params_{}.pt'.format(args.model_dir, epoch))
         
     torch.save(model.state_dict(), '{}/proxi_dist/params.pt'.format(args.model_dir))
 
@@ -123,10 +122,12 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
         distribution = Normal(dsm, dss)
 
         # calculate losses
-        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, epoch/100)
+        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
         p_loss = proximity(z, label)
         d_loss = distance(z, label) 
-        loss = r_loss + + args.ploss_weight * p_loss - args.dloss_weight * d_loss
+
+        pd_loss = args.ploss_weight * p_loss - args.dloss_weight * d_loss
+        loss = r_loss + pd_loss
         loss.backward()
 
         # clip for gradient
@@ -136,18 +137,14 @@ def train(args, dataloader, model, classifier, proximity, distance, optimizer, o
 
         # step optimizer
         optimizer.step()
-        for param in proximity.parameters():
-            param.grad.data *= (1. / args.ploss_weight)
         optimizer1.step()
-        for param in distance.parameters():
-            param.grad.data *= (1. / args.dloss_weight)
         optimizer2.step()
 
         # record results
         recon_losses.append(loss.cpu().item())
         img_losses.append(img_recon.cpu().item())
         kl_losses.append(kld.cpu().item())
-        pd_losses.append(p_loss.cpu().item() - d_loss.cpu().item())
+        pd_losses.append(pd_loss)
         outputs.append(output.cpu())
         datas.append(data.cpu())
         adv_datas.append(adv_data.cpu())
@@ -191,10 +188,10 @@ def init_models(args):
     # construct optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = MinExponentialLR(optimizer, gamma=0.998, minimum=1e-5)
-    optimizer1 = optim.Adam(proximity.parameters(), lr=args.lr*50)
-    scheduler1 = MinExponentialLR(optimizer1, gamma=0.998, minimum=1e-5)
-    optimizer2 = optim.Adam(distance.parameters(), lr=args.lr/100)
-    scheduler2 = MinExponentialLR(optimizer2, gamma=0.998, minimum=1e-5)
+    optimizer1 = optim.SGD(proximity.parameters(), lr=args.lr*500)
+    scheduler1 = MinExponentialLR(optimizer1, gamma=0.1, minimum=1e-5)
+    optimizer2 = optim.SGD(distance.parameters(), lr=args.lr/10)
+    scheduler2 = MinExponentialLR(optimizer2, gamma=0.1, minimum=1e-5)
 
     return model, proximity, distance, classifier, optimizer, scheduler,\
          optimizer1, scheduler1, optimizer2, scheduler2

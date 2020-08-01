@@ -5,10 +5,9 @@ import argparse, sys, os
 from torch.utils import data
 from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
+from test.test_models import *
 sys.path.insert(0, os.path.abspath('..'))
 from MAD_VAE import *
-from test.test_models import *
-from test.plotting import *
 from utils.dataset import *
 from utils.adversarial import *
 from utils.classifier import *
@@ -35,7 +34,7 @@ def parse_args():
 
 if __name__ == "__main__":
     models = ['vanilla', 'classification', 'proxi_dist', 'combined']
-    for i in range(4):
+    for i in range(len(models)):
 
         args = parse_args()
         model = MADVAE(args)
@@ -84,23 +83,23 @@ if __name__ == "__main__":
                 image = image.cuda()
                 label = label.cuda()
 
-                output, adv_out = add_adv(classifier, image, label, 'fgsm')
+                output, adv_out = add_adv(classifier, image, label, 'fgsm', default=True)
                 output_class = classifier(output)
                 adv_output_class = classifier(adv_out)
                 def_out, _, _, _ = model(adv_out)
-                adv_out_class = classifier(def_out)
+                cleaned_class = classifier(def_out)
 
                 true_class = torch.argmax(output_class, 1)
-                output_class = torch.argmax(adv_output_class, 1)
-                adversarial_class = torch.argmax(adv_out_class, 1)
+                adv_class = torch.argmax(adv_output_class, 1)
+                adv_clean_class = torch.argmax(cleaned_class, 1)
 
                 print(f'attack method fgsm')
                 print(f'actual class {true_class}')
-                print(f'actual advclass {output_class}')
-                print(f'adversarial class {adversarial_class}')
+                print(f'actual advclass {adv_class}')
+                print(f'adversarial class {adv_clean_class}')
 
-                true += torch.sum(torch.eq(true_class, adversarial_class))
-                true_adv += torch.sum(torch.eq(true_class, output_class))
+                true += torch.sum(torch.eq(true_class, adv_clean_class))
+                true_adv += torch.sum(torch.eq(true_class, adv_class))
 
                 print(int(true) / total)
                 print(int(true_adv) / total)

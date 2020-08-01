@@ -111,7 +111,7 @@ def train(args, dataloader, model, optimizer, step, epoch):
         distribution = Normal(dsm, dss)
 
         # calculate losses
-        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, epoch/100)
+        r_loss, img_recon, kld = recon_loss_function(output, data, distribution, step, 0.1)
         loss = r_loss
         loss.backward()
 

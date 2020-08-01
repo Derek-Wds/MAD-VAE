@@ -33,7 +33,8 @@ def parse_args():
 
 
 if __name__ == "__main__":    
-    models = ['vanilla', 'classification', 'proxi_dist', 'combined']
+    # models = ['classification', 'proxi_dist', 'vanilla', 'combined']
+    models = ['classification', 'vanilla']
     for i in range(len(models)):
         args = parse_args()
         model = MADVAE(args)
