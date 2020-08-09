@@ -10,12 +10,10 @@ if __name__ == "__main__":
             models[flavor] = json.load(f)
 
     # Models initialized with their base accuracy
-    attacks = {'OP': ['OP'], 'OP In-Bounds': ['OP In-Bounds'], 'Total': ['Total'], 'Total In-Bounds': ['Total In-Bounds']}
+    attacks = {'Accuracy': ['Accuracy'], 'Original Accuracy': ['Original Accuracy']}
     for flavor in models_list:
-        attacks['OP'].append(models[flavor]['all'][0])
-        attacks['OP In-Bounds'].append(models[flavor]['all'][1])
-        attacks['Total'].append(models[flavor]['all'][2])
-        attacks['Total In-Bounds'].append(models[flavor]['all'][3])
+        attacks['Accuracy'].append(models[flavor]['all'][0])
+        attacks['Original Accuracy'].append(models[flavor]['all'][2])
     
     for attack in attacks:
         argmax = np.argmax(attacks[attack][1:]) + 1
@@ -26,16 +24,12 @@ if __name__ == "__main__":
         c = ['c'] * (len(models_list) + 1)
         f.write("\\begin{table}[H]\n\centering\n\\begin{tabular}{")
         f.write('|'.join(c))
-        f.write("}\nAttack & Identity & Vanilla & Classification & Proximity and Distance & Combined \\\\ \\hline\n")
-        f.write(' & '.join(str(x) for x in attacks['OP']))
+        f.write("}\nMetric & Identity & Vanilla & Classification & Proximity and Distance & Combined \\\\ \\hline\n")
+        f.write(' & '.join(str(x) for x in attacks['Accuracy']))
         f.write('\\\\\n')
-        f.write(' & '.join(str(x) for x in attacks['OP In-Bounds']))
-        f.write('\\\\\n')
-        f.write(' & '.join(str(x) for x in attacks['Total']))
-        f.write('\\\\\n')
-        f.write(' & '.join(str(int(x)) for x in attacks['Total In-Bounds']))
+        f.write(' & '.join(str(x) for x in attacks['Original Accuracy']))
         f.write('\\\\\n')
         f.write('\\end{tabular}\n')
-        f.write('\\caption{Classification accuracy of different defensive models under the Overpowered Attack as well as the number of samples for both general and in-bounds (under budget) attacks.}\n')
+        f.write('\\caption{Classification accuracy of different defensive models under the Overpowered Attack. The meaning of the two metrics is explained above.}\n')
         f.write('\\label{table:whitebox-result}\n')
         f.write('\\end{table}\n')

@@ -145,6 +145,74 @@ def accuracy(cla, model, suffix="", threshold = 28 * 28 * 0.005, norms=[1.0, 2.5
     except Exception as e:
         print("Error", e)
 
+def accuracy_paper(cla, model, suffix="", threshold=28 * 28 * 0.005, norms=[1.0, 2.5, 3.0, 3.5]):
+    total_correct = 0
+    total_correct_inbds = 0
+    total_incorrect_inbds = 0
+    total_inbds = 0
+    total = 0
+    i = 0
+    try:
+        for k, (_, labels) in enumerate(dataloader):
+            labels = labels.cuda()
+            all_ints = []
+            all_orig = []
+            
+            for norm in norms:
+                for j in range(BIG_BATCH_SIZE // BATCH_SIZE):
+                    i = k * (BIG_BATCH_SIZE // BATCH_SIZE) + j
+                    intermediates = torch.load(f"intermediates{suffix}_{norm}/batch_{i}_attack")
+                    originals = torch.load(f"intermediates{suffix}_{norm}/batch_{i}_orig")
+                    
+#                     plt.imshow(intermediates.view(-1, 1, 28,28).cpu().numpy()[2,0,:,:], cmap='gray')
+#                     return
+#                     return
+                    
+                    all_ints.append(intermediates)
+                    all_orig.append(originals)
+                    
+            intermediates = torch.cat(all_ints, 0)
+            originals = torch.cat(all_orig, 0)
+            originals = originals.view(-1, 784)
+
+            clean_images, _, _, _ = model(intermediates.view(-1, 1, 28,28))
+            with torch.no_grad():
+#                 plt.imshow(intermediates.view(-1, 1, 28,28).cpu().numpy()[0,0,:,:], cmap='gray')
+                out = cla(clean_images.detach())
+                preds = out.argmax(1)
+            
+                preds_repeat = torch.stack(preds.chunk(len(norms)), 1)
+                labels_repeat = torch.stack(labels.repeat(len(norms)).chunk(len(norms)), 1)
+#                 print(preds_repeat.shape)
+#                 print(labels_repeat.shape)
+#                 return
+                
+                correct = (preds_repeat == labels_repeat)
+#                 total_correct += torch.sum(correct).float()
+#                 total += preds_repeat.shape[0] * preds_repeat.shape[1]
+                total_correct += torch.all(correct, 1).float().sum()
+                total += preds_repeat.shape[0]
+    
+#                 print(correct)
+#                 return
+
+#                 print(intermediates.shape)
+#                 print(originals.shape)
+                
+                adv_norms = (intermediates-originals).float().pow(2).sum(-1).pow(0.5)
+                adv_norms = torch.stack(adv_norms.chunk(len(norms)),1)
+            
+                total_incorrect_inbds += torch.any(torch.logical_not(correct)*(adv_norms<4),1).float().sum()
+#                 total_incorrect_inbds += torch.any((torch.logical_not(correct))*(adv_norms<4),1).float().sum()
+#             print(total, total_correct, total_inbds, total_correct_inbds)
+            print("Classifier Accuracy %f | Adversarial in-bounds accuracy %f" % (total_correct/total, total_incorrect_inbds/total))
+    except OSError as e:
+#         print(e)
+#         print(total, total_correct, total_inbds, total_correct_inbds)
+        return total, total_correct/total, total_incorrect_inbds/total
+    except Exception as e:
+        print("Error", e)
+
 
 if __name__ == "__main__":    
     norms = [1.0, 2.5, 3.0, 3.5]
@@ -156,9 +224,10 @@ if __name__ == "__main__":
     cla.eval()
 
     for method in methods:
+        print(method)
         model = MADVAE(args)
         model_pt = torch.load(
-            f'../MAD-VAE/MAD-VAE/pretrained_model/{method}/params.pt')
+            f'../pretrained_model/{method}/params.pt')
         model.load_state_dict(model_pt)
         model.eval()
 
@@ -171,10 +240,12 @@ if __name__ == "__main__":
 
         for norm in norms:
             total, total_inbds, adv, adv_inb = accuracy(cla, model, norms=[norm], suffix=f"_{method}")
-            results[f'{norm}'] = [adv.item(), adv_inb.item(), total, total_inbds.item()]
+            _, adv_old, _ = accuracy_paper(cla, model, norms=[norm], suffix=f"_{method}")
+            results[f'{norm}'] = [adv.item(), adv_inb.item(), adv_old.item()]
 
         total, total_inbds, adv, adv_inb = accuracy(cla, model, suffix=f"_{method}")
-        results['all'] = [adv.item(), adv_inb.item(), total, total_inbds.item()]
+        _, adv_old, _ = accuracy_paper(cla, model, suffix=f"_{method}")
+        results['all'] = [adv.item(), adv_inb.item(), adv_old.item()]
 
         with open(f'./results/accuracy_{method}.txt', 'w') as f:
             json.dump(results, f)
